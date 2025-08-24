@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scrum数据结构调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        .warning { background: #fff3cd; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .flow-summary { margin: 15px 0; }
+        .flow-summary h5 { margin-bottom: 10px; color: #333; }
+        .flow-summary ul { margin: 10px 0; padding-left: 20px; }
+        .flow-summary li { margin: 5px 0; }
+        .validation-issues { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin: 10px 0; }
+        .validation-issues h6 { margin: 0 0 8px 0; color: #856404; }
+        .validation-issues ul { margin: 5px 0; padding-left: 15px; }
+        .ai-generated-badge { background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; padding: 8px; margin: 10px 0; color: #1565c0; }
+        details { margin: 10px 0; }
+        details summary { cursor: pointer; font-weight: bold; padding: 5px; background: #f1f1f1; border-radius: 3px; }
+        details[open] summary { margin-bottom: 10px; }
+        /* === Kanban & Gantt Debug Styles === */
+        .viz-actions { display: flex; gap: 10px; margin: 10px 0 15px; }
+        .viz-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 1100px) { .viz-grid { grid-template-columns: 1fr 1fr; } }
+        .kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .kanban-column { background: #f8f9fa; border-radius: 10px; padding: 12px; border: 2px dashed #e0e0e0; }
+        .kanban-column .column-header { display:flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom:1px solid #e0e0e0; margin-bottom: 10px; }
+        .kanban-column .column-header h4 { margin: 0; font-size: 16px; color: #333; display:flex; align-items:center; gap:8px; }
+        .kanban-column .task-list { display:flex; flex-direction: column; gap: 10px; min-height: 200px; }
+        .task-card { background: #fff; border-radius: 8px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #e0e0e0; }
+        .task-header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 6px; }
+        .task-priority-dot { width:8px; height:8px; border-radius:50%; }
+        .task-points { font-size: 12px; background:#f1f3f5; color:#495057; padding: 2px 6px; border-radius:4px; }
+        .task-title { margin: 0 0 6px 0; font-weight:600; color:#2c3e50; font-size: 14px; }
+        .task-desc { color:#666; font-size: 13px; line-height:1.4; margin-bottom: 6px; }
+        .task-meta { display:flex; justify-content: space-between; align-items:center; font-size: 12px; color:#888; }
+        .task-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+        .task-tag { background:#e9ecef; color:#495057; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .task-progress-bar { height:6px; background:#e9ecef; border-radius:3px; overflow:hidden; margin:6px 0; }
+        .task-progress-fill { height:100%; background: linear-gradient(90deg,#28a745,#20c997); }
+        .count-badge { background:#007bff; color:#fff; border-radius:12px; padding: 2px 8px; font-size:12px; font-weight:600; }
+        .gantt-container { background:#fff; border-radius:10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border:1px solid #e0e0e0; }
+        .gantt-header-row { display:grid; grid-template-columns: 220px 1fr; background:#f8f9fa; border-bottom:1px solid #e0e0e0; border-radius:10px 10px 0 0; }
+        .gantt-task-col-title { padding:10px; font-weight:600; color:#333; border-right:1px solid #e0e0e0; }
+        .gantt-dates { display:flex; min-width: 720px; }
+        .gantt-date { flex:1; padding:10px 4px; text-align:center; font-size:12px; color:#666; border-right:1px solid #eee; }
+        .gantt-row { display:grid; grid-template-columns: 220px 1fr; border-bottom:1px solid #f1f1f1; min-height: 42px; }
+        .gantt-task-info { padding:8px 10px; background:#fff; border-right:1px solid #f1f1f1; }
+        .gantt-task-title { font-size:13px; color:#333; font-weight:600; margin-bottom:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gantt-task-meta { font-size:12px; color:#888; }
+        .gantt-timeline { position: relative; padding: 8px; min-width: 720px; background:#fafafa; }
+        .gantt-bar { position:absolute; height:18px; top: 10px; border-radius:4px; display:flex; align-items:center; padding:0 6px; color:#fff; font-size:11px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); overflow:hidden; }
+        .gantt-bar.todo { background:#6c757d; }
+        .gantt-bar.in-progress { background:#ffc107; color:#212529; }
+        .gantt-bar.done { background:#28a745; }
+        .empty-note { padding:12px; color:#666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 碳排放管理系统调试工具</h1>
+    <div class="debug-section success">
+        <h3>🎯 功能说明</h3>
+        <p><strong>此工具包含以下调试功能：</strong></p>
+        <ul>
+            <li>📋 <strong>Scrum任务生成</strong>：测试Fallback函数、数据映射、完整流程</li>
+            <li>🤖 <strong>AI分析功能</strong>：测试真实AI驱动的碳排放和时间线分析</li>
+            <li>🔍 <strong>完整流程</strong>：端到端测试文档处理到数据生成的完整过程</li>
+            <li>📺 <strong>控制台输出</strong>：所有AI输入输出都在浏览器控制台中详细显示</li>
+        </ul>
+        <p><strong>💡 使用建议：</strong>打开浏览器开发者工具的控制台，查看详细的AI调用过程和数据流。</p>
+    </div>
+    
+    <div class="debug-section">
+        <h3>测试 buildScrumPlanFallback 函数</h3>
+        <button onclick="testFallbackFunction()">测试Fallback函数</button>
+        <div id="fallbackResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>测试数据映射逻辑</h3>
+        <button onclick="testDataMapping()">测试数据映射</button>
+        <div id="mappingResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>测试完整流程</h3>
+        <button onclick="testCompleteFlow()">测试完整流程</button>
+        <div id="completeResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>🤖 测试AI分析功能</h3>
+        <button onclick="testAIAnalysis()">测试AI碳排放分析</button>
+        <div id="aiAnalysisResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>🔍 测试AI分析完整流程</h3>
+        <button onclick="testFullAIFlow()">测试完整AI分析流程</button>
+        <div id="fullAIResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>📊 可视化结果</h3>
+        <p>当上面的测试生成了任务后，可在此渲染 Kanban 和甘特图。</p>
+        <div class="viz-actions">
+            <button onclick="renderKanbanBoard()">渲染Kanban</button>
+            <button onclick="renderGanttChart()">渲染甘特图</button>
+        </div>
+        <div class="viz-grid">
+            <div>
+                <h4>看板视图</h4>
+                <div id="kanbanBoard" class="kanban-board"></div>
+            </div>
+            <div>
+                <h4>甘特图视图</h4>
+                <div id="ganttChart" class="gantt-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 复制关键函数进行独立测试
+        function buildScrumPlanFallback(acceptedByArea, analysis) {
+            const tasks = [];
+            const today = new Date();
+            let dayOffset = 0;
+            
+            Object.keys(acceptedByArea || {}).forEach(area => {
+                (acceptedByArea[area] || []).forEach((title, idx) => {
+                    const start = new Date(today.getTime() + dayOffset*86400000);
+                    const end = new Date(start.getTime() + (2 + (idx%3))*86400000);
+                    tasks.push({
+                        title: `${area} - 执行「${title}」`,
+                        desc: '根据已采纳建议落实执行、验证与复盘',
+                        priority: idx%2===0 ? 'high' : 'medium',
+                        storyPoints: [3,5,8,13][idx%4],
+                        startDate: start.toISOString().slice(0,10),
+                        endDate: end.toISOString().slice(0,10),
+                        status: idx%3===0 ? 'in-progress' : 'todo',
+                        tags: [area]
+                    });
+                    dayOffset += 1;
+                });
+            });
+            
+            // 若尚未采纳建议，基于高值板块生成基本任务
+            if (tasks.length === 0 && analysis?.emissions) {
+                const sorted = Object.entries(analysis.emissions).sort((a,b)=> (b[1].value||0) - (a[1].value||0)).slice(0,3);
+                sorted.forEach(([k,v],i)=>{
+                    const start = new Date(today.getTime() + i*86400000);
+                    const end = new Date(start.getTime() + 3*86400000);
+                    tasks.push({
+                        title: `降低「${k}」阶段排放`,
+                        desc: '制定并执行降碳举措，跟踪指标',
+                        priority: i===0?'high':'medium',
+                        storyPoints: [8,5,3][i] || 5,
+                        startDate: start.toISOString().slice(0,10),
+                        endDate: end.toISOString().slice(0,10),
+                        status: 'todo',
+                        tags: ['降碳']
+                    });
+                });
+            }
+            return { sprint: {}, tasks };
+        }
+
+        function testFallbackFunction() {
+            const testData = {
+                acceptedByArea: {
+                    '材料选择': ['使用可回收材料', '优化包装设计'],
+                    '生产工艺': ['改进生产流程', '降低能耗']
+                },
+                analysis: {
+                    emissions: {
+                        'manufacturing': { value: 100 },
+                        'logistics': { value: 80 },
+                        'packaging': { value: 60 }
+                    }
+                }
+            };
+
+            try {
+                const result = buildScrumPlanFallback(testData.acceptedByArea, testData.analysis);
+                document.getElementById('fallbackResult').innerHTML = `
+                    <div class="success">
+                        <h4>✅ Fallback函数测试成功</h4>
+                        <p><strong>返回类型:</strong> ${typeof result}</p>
+                        <p><strong>任务数量:</strong> ${result.tasks ? result.tasks.length : '无'}</p>
+                        <p><strong>任务类型:</strong> ${Array.isArray(result.tasks) ? 'Array' : typeof result.tasks}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('fallbackResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ Fallback函数测试失败</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function testDataMapping() {
+            // 测试数据映射逻辑
+            const mockPlan = {
+                sprint: {},
+                tasks: [
+                    { title: '任务1', status: 'todo', priority: 'high', storyPoints: 5 },
+                    { title: '任务2', status: 'in-progress', priority: 'medium', storyPoints: 3 },
+                    { title: '任务3', status: 'done', priority: 'low', storyPoints: 8 }
+                ]
+            };
+
+            try {
+                const buckets = { 'todo': [], 'in-progress': [], 'done': [] };
+                const tasks = Array.isArray(mockPlan?.tasks) ? mockPlan.tasks : [];
+                
+                const normalizePriority = (p) => (p==='high'||p==='medium'||p==='low') ? p : 'medium';
+                const normalizeStatus = (s) => (s==='todo'||s==='in-progress'||s==='done') ? s : 'todo';
+
+                tasks.forEach((t, idx) => {
+                    const task = {
+                        id: `test-${Date.now()}-${idx}`,
+                        title: t.title || `任务${idx+1}`,
+                        description: t.desc || '',
+                        assignee: '测试用户',
+                        priority: normalizePriority(t.priority),
+                        storyPoints: Number.isFinite(t.storyPoints) ? t.storyPoints : 5,
+                        startDate: new Date().toISOString().slice(0,10),
+                        endDate: new Date(Date.now()+3*86400000).toISOString().slice(0,10),
+                        tags: Array.isArray(t.tags) ? t.tags : [],
+                        progress: t.status==='in-progress' ? 30 : (t.status==='done'? 100 : undefined)
+                    };
+                    buckets[normalizeStatus(t.status)].push(task);
+                });
+
+                const finalData = Object.assign(buckets, { __auto: true });
+
+                // 保存为全局任务并渲染
+                window.scrumTasks = finalData;
+                safeRenderVisuals();
+
+                document.getElementById('mappingResult').innerHTML = `
+                    <div class="success">
+                        <h4>✅ 数据映射测试成功</h4>
+                        <p><strong>原始任务数:</strong> ${tasks.length}</p>
+                        <p><strong>映射后结构:</strong></p>
+                        <ul>
+                            <li>todo: ${finalData.todo.length} 个任务</li>
+                            <li>in-progress: ${finalData['in-progress'].length} 个任务</li>
+                            <li>done: ${finalData.done.length} 个任务</li>
+                        </ul>
+                        <pre>${JSON.stringify(finalData, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('mappingResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ 数据映射测试失败</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function testCompleteFlow() {
+            // 测试完整的数据生成和渲染准备流程
+            try {
+                // Step 1: 生成fallback数据
+                const acceptedByArea = {
+                    '材料选择': ['使用可回收材料'],
+                    '生产工艺': ['改进生产流程']
+                };
+                const analysis = {};
+                
+                const plan = buildScrumPlanFallback(acceptedByArea, analysis);
+                
+                // Step 2: 映射数据
+                const buckets = { 'todo': [], 'in-progress': [], 'done': [] };
+                const tasks = Array.isArray(plan?.tasks) ? plan.tasks : [];
+                
+                const normalizePriority = (p) => (p==='high'||p==='medium'||p==='low') ? p : 'medium';
+                const normalizeStatus = (s) => (s==='todo'||s==='in-progress'||s==='done') ? s : 'todo';
+
+                tasks.forEach((t, idx) => {
+                    const task = {
+                        id: `test-${Date.now()}-${idx}`,
+                        title: t.title || `任务${idx+1}`,
+                        description: t.desc || '',
+                        assignee: '测试用户',
+                        priority: normalizePriority(t.priority),
+                        storyPoints: Number.isFinite(t.storyPoints) ? t.storyPoints : 5,
+                        startDate: t.startDate || new Date().toISOString().slice(0,10),
+                        endDate: t.endDate || new Date(Date.now()+3*86400000).toISOString().slice(0,10),
+                        tags: Array.isArray(t.tags) ? t.tags : [],
+                        progress: t.status==='in-progress' ? 30 : (t.status==='done'? 100 : undefined)
+                    };
+                    buckets[normalizeStatus(t.status)].push(task);
+                });
+
+                const scrumTasks = Object.assign(buckets, { __auto: true });
+                
+                // Step 3: 验证渲染准备
+                let renderReady = true;
+                let renderIssues = [];
+                
+                Object.keys(scrumTasks).forEach(status => {
+                    if (status !== '__auto' && status !== '__aiGenerated') {
+                        if (!Array.isArray(scrumTasks[status])) {
+                            renderReady = false;
+                            renderIssues.push(`状态 ${status} 不是数组`);
+                        }
+                    }
+                });
+
+                document.getElementById('completeResult').innerHTML = `
+                    <div class="${renderReady ? 'success' : 'error'}">
+                        <h4>${renderReady ? '✅' : '❌'} 完整流程测试${renderReady ? '成功' : '失败'}</h4>
+                        <p><strong>原始计划任务数:</strong> ${plan.tasks?.length || 0}</p>
+                        <p><strong>映射后任务分布:</strong></p>
+                        <ul>
+                            <li>todo: ${scrumTasks.todo?.length || 0} 个任务</li>
+                            <li>in-progress: ${scrumTasks['in-progress']?.length || 0} 个任务</li>
+                            <li>done: ${scrumTasks.done?.length || 0} 个任务</li>
+                        </ul>
+                        <p><strong>渲染准备状态:</strong> ${renderReady ? '就绪' : '有问题'}</p>
+                        ${renderIssues.length > 0 ? `<p><strong>问题:</strong> ${renderIssues.join(', ')}</p>` : ''}
+                        <details>
+                            <summary>查看完整数据结构</summary>
+                            <pre>${JSON.stringify(scrumTasks, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+
+                // 保存为全局任务并渲染
+                window.scrumTasks = scrumTasks;
+                safeRenderVisuals();
+            } catch (error) {
+                document.getElementById('completeResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ 完整流程测试失败</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                        <p><strong>错误堆栈:</strong></p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== AI分析功能测试 ====================
+        
+        // 模拟文档数据
+        const MOCK_DOCUMENT_DATA = {
+            content: "EcoLoop是一款面向城市通勤的纯电动汽车，采用轻量化铝合金车身，配备高效永磁同步电机，续航里程达到400公里。车辆采用锂离子电池组，支持快速充电技术。整车重量控制在1200公斤，具备优异的能耗表现。生产过程中采用环保材料和清洁能源，符合欧盟RoHS标准。",
+            documentType: 'automotive'
+        };
+
+        const MOCK_SUPPLEMENT_DATA = {
+            "供应商地理位置信息": "江苏苏州（基于汽车制造产业集群分析）",
+            "原材料具体规格和来源": "钢材-宝钢集团，橡胶-米其林，电池-比亚迪",
+            "生产工艺详细流程": "冲压成型→焊接装配→涂装处理→总装调试→路试检验",
+            "物流运输方式和路径": "多式联运，海运+陆运结合，成本优化12%",
+            "产品使用场景和周期": "交通工具，使用寿命10-15年"
+        };
+
+        // 获取产品类型名称
+        function getDocumentTypeName(type) {
+            const typeNames = {
+                'automotive': '汽车制造',
+                'electronics': '电子产品',
+                'textile': '纺织品',
+                'general': '通用产品'
+            };
+            return typeNames[type] || type;
+        }
+
+        // AI分析碳排放和时间线数据
+        async function generateAIAnalysisData(documentContent, supplementData, productType) {
+            console.log('%c🤖 进入generateAIAnalysisData函数', 'color: green; font-weight: bold;');
+            console.log('函数参数验证:');
+            console.log('- documentContent类型:', typeof documentContent, '长度:', documentContent?.length);
+            console.log('- supplementData类型:', typeof supplementData, '键数:', Object.keys(supplementData || {}).length);
+            console.log('- productType:', productType);
+            
+            const productTypeName = getDocumentTypeName(productType);
+            console.log('- 产品类型名称:', productTypeName);
+            
+            try {
+                console.log('🤖 开始AI分析碳排放和时间线数据...');
+                console.log('📤 输入数据:');
+                console.log('- 产品类型:', productTypeName);
+                console.log('- 文档内容长度:', documentContent.length);
+                console.log('- 文档内容预览:', documentContent.substring(0, 100) + '...');
+                console.log('- 补充数据:', supplementData);
+                
+                // 构建AI分析提示词
+                const prompt = `作为碳排放管理和生命周期评估专家，请分析以下产品的碳排放和时间线数据。
+
+【产品信息】
+产品类型：${productTypeName}
+文档内容：${documentContent.substring(0, 1500)}
+补充信息：${Object.entries(supplementData).map(([key, value]) => `${key}: ${value}`).join(', ')}
+
+请为该产品生成真实可信的碳排放和时间线分析数据（JSON格式）：
+
+{
+  "emissions": {
+    "procurement": {"value": 数值, "unit": "kg CO₂e", "description": "原料采购阶段排放描述"},
+    "manufacturing": {"value": 数值, "unit": "kg CO₂e", "description": "生产制造阶段排放描述"},
+    "logistics": {"value": 数值, "unit": "kg CO₂e", "description": "物流运输阶段排放描述"},
+    "usage": {"value": 数值, "unit": "kg CO₂e", "description": "产品使用阶段排放描述"},
+    "recycling": {"value": 数值, "unit": "kg CO₂e", "description": "回收处理阶段排放描述"},
+    "decomposition": {"value": 数值, "unit": "kg CO₂e", "description": "自然降解阶段排放描述"}
+  },
+  "timeline": {
+    "purchase": {"duration": 天数, "unit": "天", "description": "采购阶段时长描述"},
+    "produce": {"duration": 天数, "unit": "天", "description": "生产阶段时长描述"},
+    "use": {"duration": 天数, "unit": "天", "description": "使用阶段时长描述"},
+    "recycle": {"duration": 天数, "unit": "天", "description": "回收阶段时长描述"},
+    "decompose": {"duration": 天数, "unit": "天", "description": "分解阶段时长描述"}
+  }
+}
+
+要求：
+1. 根据产品类型和特征提供真实合理的数值
+2. 碳排放值基于实际行业数据，单位统一为kg CO₂e
+3. 时间线统一用天为单位（1个月=30天，1年=365天）
+4. 考虑产品的具体特点和使用场景
+5. 数值要具有可信度，符合行业常识
+6. 返回严格JSON格式，无多余文本`;
+
+                console.log('📤 完整AI提示词:');
+                console.log(prompt);
+                console.log('📤 提示词长度:', prompt.length, '字符');
+
+                // 构建请求参数
+                const requestBody = {
+                    model: 'deepseek-ai/DeepSeek-V3.1',
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }],
+                    max_tokens: 1000,
+                    temperature: 0.3
+                };
+                
+                console.log('📤 API请求参数:', requestBody);
+                console.log('📤 开始发送API请求到:', 'https://api-inference.modelscope.cn/v1/chat/completions');
+                console.log('📤 请求时间:', new Date().toISOString());
+
+                const response = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('📥 AI API响应状态:', response.status, response.statusText);
+                console.log('📥 响应时间:', new Date().toISOString());
+                console.log('📥 响应头:', Object.fromEntries(response.headers.entries()));
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API响应失败');
+                    console.error('响应状态:', response.status, response.statusText);
+                    console.error('错误内容:', errorText);
+                    throw new Error(`AI分析API调用失败: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+
+                console.log('✅ API响应成功，开始解析数据...');
+                const data = await response.json();
+                console.log('📥 AI API完整响应:', data);
+                
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    console.error('❌ API响应格式错误:', data);
+                    throw new Error('API响应格式错误：缺少choices或message字段');
+                }
+                
+                const aiResponse = data.choices[0].message.content;
+                console.log('📥 AI返回内容:', aiResponse);
+                console.log('📥 AI返回内容长度:', aiResponse.length, '字符');
+                
+                // 解析AI返回的JSON
+                const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    console.log('🔍 提取的JSON字符串:', jsonMatch[0]);
+                    const analysisData = JSON.parse(jsonMatch[0]);
+                    console.log('✅ 解析后的分析数据:', analysisData);
+                    return { success: true, data: analysisData, rawResponse: aiResponse };
+                } else {
+                    console.warn('⚠️ 未找到有效JSON格式');
+                    return { success: false, error: '未找到有效JSON格式', rawResponse: aiResponse };
+                }
+                
+            } catch (error) {
+                console.error('%c❌ generateAIAnalysisData函数异常', 'color: red; font-weight: bold;');
+                console.error('错误类型:', error.constructor.name);
+                console.error('错误消息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                console.error('发生时间:', new Date().toISOString());
+                return { success: false, error: error.message, errorType: error.constructor.name };
+            }
+        }
+
+        // 测试AI分析功能
+        async function testAIAnalysis() {
+            // 立即输出调试信息
+            console.clear(); // 清空控制台
+            console.log('%c🚀 AI分析测试被点击了！', 'color: blue; font-size: 16px; font-weight: bold;');
+            console.log('=================== AI分析测试开始 ===================');
+            console.log('当前时间:', new Date().toLocaleTimeString());
+            
+            document.getElementById('aiAnalysisResult').innerHTML = `
+                <div class="warning">
+                    <h4>🤖 正在测试AI分析功能...</h4>
+                    <p>请查看浏览器控制台获取详细输入输出信息</p>
+                    <p>⏰ 开始时间: ${new Date().toLocaleTimeString()}</p>
+                </div>
+            `;
+
+            try {
+                console.log('📋 测试数据准备...');
+                console.log('- 文档数据:', MOCK_DOCUMENT_DATA);
+                console.log('- 补充数据:', MOCK_SUPPLEMENT_DATA);
+                console.log('✅ 测试数据准备完成');
+                console.log('🎯 开始调用AI API...');
+
+                const result = await generateAIAnalysisData(
+                    MOCK_DOCUMENT_DATA.content,
+                    MOCK_SUPPLEMENT_DATA,
+                    MOCK_DOCUMENT_DATA.documentType
+                );
+
+                if (result.success) {
+                    document.getElementById('aiAnalysisResult').innerHTML = `
+                        <div class="success">
+                            <h4>✅ AI分析测试成功</h4>
+                            <p><strong>分析结果验证:</strong></p>
+                            <ul>
+                                <li>碳排放数据: ${result.data.emissions ? Object.keys(result.data.emissions).length : 0} 个阶段</li>
+                                <li>时间线数据: ${result.data.timeline ? Object.keys(result.data.timeline).length : 0} 个阶段</li>
+                            </ul>
+                            <details>
+                                <summary>查看分析结果JSON</summary>
+                                <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                            </details>
+                            <details>
+                                <summary>查看AI原始响应</summary>
+                                <pre>${result.rawResponse}</pre>
+                            </details>
+                        </div>
+                    `;
+                    console.log('✅ AI分析测试成功完成');
+                } else {
+                    document.getElementById('aiAnalysisResult').innerHTML = `
+                        <div class="error">
+                            <h4>❌ AI分析测试失败</h4>
+                            <p><strong>错误:</strong> ${result.error}</p>
+                            ${result.rawResponse ? `
+                                <details>
+                                    <summary>查看AI原始响应</summary>
+                                    <pre>${result.rawResponse}</pre>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                    console.log('❌ AI分析测试失败:', result.error);
+                }
+
+                console.log('=================== AI分析测试结束 ===================');
+
+            } catch (error) {
+                console.error('%c❌ AI分析测试异常', 'color: red; font-size: 14px; font-weight: bold;');
+                console.error('错误详情:', error);
+                console.error('错误消息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                
+                document.getElementById('aiAnalysisResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ AI分析测试异常</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                        <p>⏰ 错误时间: ${new Date().toLocaleTimeString()}</p>
+                        <details>
+                            <summary>查看错误堆栈</summary>
+                            <pre>${error.stack}</pre>
+                        </details>
+                    </div>
+                `;
+                console.log('=================== AI分析测试异常结束 ===================');
+            }
+        }
+
+        // 测试完整AI分析流程
+        async function testFullAIFlow() {
+            document.getElementById('fullAIResult').innerHTML = `
+                <div class="warning">
+                    <h4>🔄 正在测试完整AI分析流程...</h4>
+                    <p>包含：文档处理 → AI分析 → 数据整合 → 渲染准备</p>
+                    <p>请查看浏览器控制台获取详细过程信息</p>
+                </div>
+            `;
+
+            try {
+                console.log('=================== 完整AI流程测试开始 ===================');
+                
+                // Step 1: 模拟文档处理
+                console.log('📋 Step 1: 文档处理');
+                const documentContent = MOCK_DOCUMENT_DATA.content;
+                const supplementData = MOCK_SUPPLEMENT_DATA;
+                const productType = MOCK_DOCUMENT_DATA.documentType;
+                console.log('✅ 文档处理完成');
+
+                // Step 2: AI分析
+                console.log('🤖 Step 2: AI分析');
+                const aiResult = await generateAIAnalysisData(documentContent, supplementData, productType);
+                
+                if (!aiResult.success) {
+                    throw new Error('AI分析失败: ' + aiResult.error);
+                }
+                console.log('✅ AI分析完成');
+
+                // Step 3: 数据整合
+                console.log('🔧 Step 3: 数据整合');
+                const analysisData = {
+                    emissions: {},
+                    timeline: {},
+                    needsAIAnalysis: false,
+                    aiGeneratedAt: new Date().toISOString()
+                };
+
+                // 整合碳排放数据
+                if (aiResult.data.emissions) {
+                    Object.keys(aiResult.data.emissions).forEach(phase => {
+                        const aiValue = aiResult.data.emissions[phase].value;
+                        analysisData.emissions[phase] = {
+                            value: aiValue,
+                            originalValue: aiValue,
+                            isAIGenerated: true,
+                            description: aiResult.data.emissions[phase].description
+                        };
+                    });
+                }
+
+                // 整合时间线数据
+                if (aiResult.data.timeline) {
+                    Object.keys(aiResult.data.timeline).forEach(phase => {
+                        const aiDuration = aiResult.data.timeline[phase].duration;
+                        analysisData.timeline[phase] = {
+                            duration: aiDuration,
+                            originalDuration: aiDuration,
+                            isAIGenerated: true,
+                            description: aiResult.data.timeline[phase].description,
+                            unit: '天'
+                        };
+                    });
+                }
+                console.log('✅ 数据整合完成');
+
+                // Step 4: 验证数据完整性
+                console.log('🔍 Step 4: 数据验证');
+                const emissionPhases = ['procurement', 'manufacturing', 'logistics', 'usage', 'recycling', 'decomposition'];
+                const timelinePhases = ['purchase', 'produce', 'use', 'recycle', 'decompose'];
+                
+                const missingEmissions = emissionPhases.filter(phase => !analysisData.emissions[phase]);
+                const missingTimeline = timelinePhases.filter(phase => !analysisData.timeline[phase]);
+                
+                let validationIssues = [];
+                if (missingEmissions.length > 0) {
+                    validationIssues.push(`缺少碳排放阶段: ${missingEmissions.join(', ')}`);
+                }
+                if (missingTimeline.length > 0) {
+                    validationIssues.push(`缺少时间线阶段: ${missingTimeline.join(', ')}`);
+                }
+
+                console.log('🎯 验证结果:');
+                console.log('- 碳排放阶段:', Object.keys(analysisData.emissions).length, '/', emissionPhases.length);
+                console.log('- 时间线阶段:', Object.keys(analysisData.timeline).length, '/', timelinePhases.length);
+                console.log('- 验证问题:', validationIssues.length === 0 ? '无' : validationIssues);
+
+                // 显示结果
+                document.getElementById('fullAIResult').innerHTML = `
+                    <div class="success">
+                        <h4>✅ 完整AI分析流程测试成功</h4>
+                        <div class="flow-summary">
+                            <h5>📊 流程总结:</h5>
+                            <ul>
+                                <li>✅ 文档处理: ${documentContent.length} 字符</li>
+                                <li>✅ AI分析: 成功生成分析数据</li>
+                                <li>✅ 数据整合: ${Object.keys(analysisData.emissions).length} 个碳排放阶段, ${Object.keys(analysisData.timeline).length} 个时间线阶段</li>
+                                <li>✅ 数据验证: ${validationIssues.length === 0 ? '通过' : '发现 ' + validationIssues.length + ' 个问题'}</li>
+                            </ul>
+                            ${validationIssues.length > 0 ? `
+                                <div class="validation-issues">
+                                    <h6>⚠️ 验证问题:</h6>
+                                    <ul>${validationIssues.map(issue => `<li>${issue}</li>`).join('')}</ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <details>
+                            <summary>查看完整分析数据结构</summary>
+                            <pre>${JSON.stringify(analysisData, null, 2)}</pre>
+                        </details>
+                        <div class="ai-generated-badge">
+                            <strong>🤖 数据来源:</strong> 100% AI生成 (DeepSeek-V3.1)
+                        </div>
+                    </div>
+                `;
+
+                // 若尚无任务，基于分析数据生成简单计划并渲染
+                try {
+                    if (!window.scrumTasks || !Array.isArray(window.scrumTasks?.todo)) {
+                        const fallbackPlan = buildScrumPlanFallback({}, analysisData);
+                        const buckets = { 'todo': [], 'in-progress': [], 'done': [] };
+                        const tasks = Array.isArray(fallbackPlan?.tasks) ? fallbackPlan.tasks : [];
+                        const normalizePriority = (p) => (p==='high'||p==='medium'||p==='low') ? p : 'medium';
+                        const normalizeStatus = (s) => (s==='todo'||s==='in-progress'||s==='done') ? s : 'todo';
+                        tasks.forEach((t, idx) => {
+                            const task = {
+                                id: `gen-${Date.now()}-${idx}`,
+                                title: t.title || `任务${idx+1}`,
+                                description: t.desc || '',
+                                assignee: '',
+                                priority: normalizePriority(t.priority),
+                                storyPoints: Number.isFinite(t.storyPoints) ? t.storyPoints : 5,
+                                startDate: t.startDate || new Date().toISOString().slice(0,10),
+                                endDate: t.endDate || new Date(Date.now()+3*86400000).toISOString().slice(0,10),
+                                tags: Array.isArray(t.tags) ? t.tags : [],
+                                progress: t.status==='in-progress' ? 30 : (t.status==='done'? 100 : undefined)
+                            };
+                            buckets[normalizeStatus(t.status)].push(task);
+                        });
+                        window.scrumTasks = Object.assign(buckets, { __auto: true });
+                        safeRenderVisuals();
+                    }
+                } catch(e) { console.warn('生成可视化计划失败:', e); }
+
+                console.log('✅ 完整AI流程测试成功完成');
+                console.log('=================== 完整AI流程测试结束 ===================');
+
+            } catch (error) {
+                document.getElementById('fullAIResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ 完整AI分析流程测试失败</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `;
+                console.error('❌ 完整AI流程测试失败:', error);
+                console.log('=================== 完整AI流程测试异常结束 ===================');
+            }
+        }
+
+        // ==================== 可视化渲染函数 ====================
+        function safeRenderVisuals() {
+            try { renderKanbanBoard(); } catch(e) { console.warn('渲染Kanban失败:', e); }
+            try { renderGanttChart(); } catch(e) { console.warn('渲染甘特图失败:', e); }
+        }
+
+        function getBuckets() {
+            const empty = { 'todo': [], 'in-progress': [], 'done': [] };
+            if (!window.scrumTasks) return empty;
+            return {
+                'todo': Array.isArray(window.scrumTasks['todo']) ? window.scrumTasks['todo'] : [],
+                'in-progress': Array.isArray(window.scrumTasks['in-progress']) ? window.scrumTasks['in-progress'] : [],
+                'done': Array.isArray(window.scrumTasks['done']) ? window.scrumTasks['done'] : []
+            };
+        }
+
+        function renderKanbanBoard() {
+            const board = document.getElementById('kanbanBoard');
+            if (!board) return;
+            const buckets = getBuckets();
+            const statusNames = { 'todo': '待办事项', 'in-progress': '进行中', 'done': '已完成' };
+            const colors = { high: '#dc3545', medium: '#ffc107', low: '#28a745' };
+
+            const colHtml = ['todo','in-progress','done'].map(status => {
+                const items = buckets[status].map(task => {
+                    const progress = Number.isFinite(task.progress) ? Math.max(0, Math.min(100, task.progress)) : null;
+                    return `
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority-dot" style="background:${colors[task.priority]||'#adb5bd'}"></span>
+                                <span class="task-points">${Number.isFinite(task.storyPoints)?task.storyPoints:5} SP</span>
+                            </div>
+                            <h5 class="task-title">${escapeHtml(task.title||'未命名任务')}</h5>
+                            ${task.description?`<div class="task-desc">${escapeHtml(task.description)}</div>`:''}
+                            ${progress!==null?`<div class="task-progress-bar"><div class="task-progress-fill" style="width:${progress}%"></div></div>`:''}
+                            <div class="task-meta">
+                                <span>${escapeHtml(task.assignee||'未分配')}</span>
+                                <span>${escapeHtml(task.startDate||'')}${task.endDate?` - ${escapeHtml(task.endDate)}`:''}</span>
+                            </div>
+                            ${Array.isArray(task.tags)&&task.tags.length?`<div class="task-tags">${task.tags.map(t=>`<span class=\"task-tag\">${escapeHtml(String(t))}</span>`).join('')}</div>`:''}
+                        </div>`;
+                }).join('');
+                return `
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <h4>${statusNames[status]}</h4>
+                            <span class="count-badge">${buckets[status].length}</span>
+                        </div>
+                        <div class="task-list">${items || '<div class="empty-note">暂无任务</div>'}</div>
+                    </div>`;
+            }).join('');
+
+            board.innerHTML = colHtml;
+        }
+
+        function parseISO(d){ try { return new Date(d); } catch(e){ return null; } }
+
+        function collectAllTasks() {
+            const b = getBuckets();
+            return ([]).concat(b['todo'], b['in-progress'], b['done']).filter(Boolean);
+        }
+
+        function getMinMaxDates(tasks){
+            const starts = tasks.map(t=>parseISO(t.startDate)).filter(x=>x&&isFinite(x));
+            const ends = tasks.map(t=>parseISO(t.endDate)).filter(x=>x&&isFinite(x));
+            if (!starts.length || !ends.length) return null;
+            const min = new Date(Math.min(...starts));
+            const max = new Date(Math.max(...ends));
+            // 保证至少1天范围
+            if (min.getTime()===max.getTime()) { max.setDate(max.getDate()+1); }
+            return {min,max};
+        }
+
+        function eachDay(from,to){ const days=[]; const d=new Date(from); while(d<=to){ days.push(new Date(d)); d.setDate(d.getDate()+1);} return days; }
+        function fmtShort(d){ const m=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${m}/${dd}`; }
+
+        function renderGanttChart() {
+            const wrap = document.getElementById('ganttChart');
+            if (!wrap) return;
+            const all = collectAllTasks();
+            if (!all.length) { wrap.innerHTML = '<div class="empty-note">暂无任务数据，请先运行上方测试生成任务</div>'; return; }
+            const range = getMinMaxDates(all);
+            if (!range) { wrap.innerHTML = '<div class="empty-note">任务缺少有效日期，无法渲染甘特图</div>'; return; }
+            const days = eachDay(range.min, range.max);
+
+            const header = `
+                <div class="gantt-header-row">
+                    <div class="gantt-task-col-title">任务信息</div>
+                    <div class="gantt-dates">
+                        ${days.map(d=>`<div class="gantt-date" title="${d.toISOString().slice(0,10)}">${fmtShort(d)}</div>`).join('')}
+                    </div>
+                </div>`;
+
+            const totalDays = Math.max(1, Math.round((range.max - range.min)/(24*3600*1000))+1);
+
+            const rows = all.map(task => {
+                const s = parseISO(task.startDate); const e = parseISO(task.endDate);
+                const startOffset = Math.max(0, Math.floor((s - range.min)/(24*3600*1000)));
+                const dur = Math.max(1, Math.floor((e - s)/(24*3600*1000))+1);
+                const leftPct = (startOffset/totalDays)*100;
+                const widthPct = (dur/totalDays)*100;
+                let status = 'todo';
+                if ((window.scrumTasks?.['in-progress']||[]).some(t=>t.id===task.id)) status='in-progress';
+                if ((window.scrumTasks?.['done']||[]).some(t=>t.id===task.id)) status='done';
+                return `
+                    <div class="gantt-row">
+                        <div class="gantt-task-info">
+                            <div class="gantt-task-title" title="${escapeHtml(task.title||'')}">${escapeHtml(task.title||'')}</div>
+                            <div class="gantt-task-meta">${escapeHtml(task.startDate||'')} - ${escapeHtml(task.endDate||'')} · ${Number.isFinite(task.storyPoints)?task.storyPoints:5} SP</div>
+                        </div>
+                        <div class="gantt-timeline">
+                            <div class="gantt-bar ${status}" style="left:${leftPct}%; width:${widthPct}%;" title="${escapeHtml(task.title||'')}">${escapeHtml(task.title||'')}</div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            wrap.innerHTML = header + `<div class="gantt-rows">${rows}</div>`;
+        }
+
+        function escapeHtml(s){
+            return String(s).replace(/[&<>"]+/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+        }
+
+        // 页面加载时验证函数
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('%c🔧 调试工具加载完成', 'color: purple; font-size: 14px; font-weight: bold;');
+            console.log('验证关键函数是否定义:');
+            console.log('- testAIAnalysis:', typeof testAIAnalysis);
+            console.log('- generateAIAnalysisData:', typeof generateAIAnalysisData);
+            console.log('- getDocumentTypeName:', typeof getDocumentTypeName);
+            console.log('- testFullAIFlow:', typeof testFullAIFlow);
+            console.log('📋 模拟数据验证:');
+            console.log('- MOCK_DOCUMENT_DATA:', MOCK_DOCUMENT_DATA);
+            console.log('- MOCK_SUPPLEMENT_DATA:', MOCK_SUPPLEMENT_DATA);
+            
+            // 测试按钮绑定
+            const aiButton = document.querySelector('button[onclick="testAIAnalysis()"]');
+            if (aiButton) {
+                console.log('✅ AI分析按钮找到并绑定正确');
+            } else {
+                console.error('❌ AI分析按钮未找到或绑定错误');
+            }
+            
+            console.log('🎯 调试工具就绪，可以开始测试');
+        });
+    </script>
+</body>
+</html>

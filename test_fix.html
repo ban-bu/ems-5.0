@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试修复：从Lean到Scrum甘特图加载提示</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .test-controls h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .test-controls button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .test-controls button:hover {
+            background: #0056b3;
+        }
+        .test-status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-controls">
+        <h4>🧪 测试控制面板</h4>
+        <button onclick="testLeanToScrum()">测试：Lean → Scrum 切换</button>
+        <button onclick="testDirectScrum()">测试：直接进入 Scrum</button>
+        <button onclick="resetTest()">重置测试</button>
+        <div class="test-status" id="testStatus">
+            准备开始测试...
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-leaf"></i>
+                <span>碳排放管理系统 - 修复测试</span>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab" data-module="upload">文档上传</button>
+                <button class="nav-tab" data-module="kanban">Kanban分析</button>
+                <button class="nav-tab active" data-module="lean">Lean优化</button>
+                <button class="nav-tab" data-module="scrum">Scrum执行</button>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 文档上传模块 -->
+            <div id="upload-module" class="module">
+                <div class="module-header">
+                    <h2>文档上传模块</h2>
+                </div>
+            </div>
+
+            <!-- Kanban模块 -->
+            <div id="kanban-module" class="module">
+                <div class="module-header">
+                    <h2>Kanban 碳排放分析</h2>
+                </div>
+            </div>
+
+            <!-- Lean模块 -->
+            <div id="lean-module" class="module active">
+                <div class="module-header">
+                    <h2><i class="fas fa-lightbulb"></i> Lean 优化分析</h2>
+                    <p>深度分析高排放原因并提供优化建议</p>
+                </div>
+                
+                <div class="analysis-content">
+                    <div class="test-lean-content" style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                        <h3>🔧 模拟Lean优化结果</h3>
+                        <p>这是一个模拟的Lean优化分析结果。通常在这里会显示各种优化建议和分析数据。</p>
+                        
+                        <div class="action-section" style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px;">
+                            <h3><i class="fas fa-arrow-right"></i> 下一步：进入Scrum执行</h3>
+                            <p>基于上述优化分析结果，前往Scrum分解任务并生成执行计划。</p>
+                            <button id="leanToScrumBtn" class="btn btn-primary btn-large" onclick="goToScrumExecution()">
+                                <i class="fas fa-tasks"></i> 转到Scrum执行
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrum模块 -->
+            <div id="scrum-module" class="module">
+                <div class="module-header">
+                    <h2><i class="fas fa-tasks"></i> Scrum 执行跟踪</h2>
+                    <p>各部门任务分配与进度监控</p>
+                </div>
+                
+                <div class="scrum-content" id="scrumContent">
+                    <div class="scrum-placeholder">
+                        <i class="fas fa-clipboard-check"></i>
+                        <p>请先完成Lean优化分析并确认方案</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 测试函数
+        function updateTestStatus(message, type = 'info') {
+            const status = document.getElementById('testStatus');
+            const colors = {
+                info: '#f8f9fa',
+                success: '#d4edda',
+                warning: '#fff3cd',
+                error: '#f8d7da'
+            };
+            status.style.background = colors[type] || colors.info;
+            status.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+        }
+
+        function testLeanToScrum() {
+            updateTestStatus('开始测试：从Lean页面切换到Scrum页面...', 'info');
+            
+            // 模拟在Lean页面
+            switchModule('lean');
+            setTimeout(() => {
+                updateTestStatus('当前在Lean页面，2秒后点击"转到Scrum执行"按钮...', 'info');
+                
+                setTimeout(() => {
+                    updateTestStatus('点击"转到Scrum执行"按钮，观察甘特图加载提示...', 'warning');
+                    goToScrumExecution();
+                    
+                    setTimeout(() => {
+                        // 检查甘特图是否显示了加载提示
+                        const ganttChart = document.getElementById('ganttChart');
+                        if (ganttChart && ganttChart.innerHTML.includes('正在生成甘特图')) {
+                            updateTestStatus('✅ 成功！甘特图加载提示正确显示', 'success');
+                        } else {
+                            updateTestStatus('❌ 失败：甘特图加载提示未显示', 'error');
+                        }
+                    }, 200);
+                }, 2000);
+            }, 500);
+        }
+
+        function testDirectScrum() {
+            updateTestStatus('开始测试：直接切换到Scrum页面...', 'info');
+            switchModule('scrum');
+            
+            setTimeout(() => {
+                const ganttChart = document.getElementById('ganttChart');
+                if (ganttChart && ganttChart.innerHTML.includes('正在生成甘特图')) {
+                    updateTestStatus('✅ 成功！直接切换到Scrum页面，甘特图加载提示正确显示', 'success');
+                } else {
+                    updateTestStatus('❌ 失败：直接切换到Scrum页面，甘特图加载提示未显示', 'error');
+                }
+            }, 300);
+        }
+
+        function resetTest() {
+            updateTestStatus('重置测试环境...', 'info');
+            // 清除所有模块的active状态
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            // 回到Lean页面
+            document.getElementById('lean-module').classList.add('active');
+            document.querySelector('[data-module="lean"]').classList.add('active');
+            
+            // 重置scrum内容
+            document.getElementById('scrumContent').innerHTML = `
+                <div class="scrum-placeholder">
+                    <i class="fas fa-clipboard-check"></i>
+                    <p>请先完成Lean优化分析并确认方案</p>
+                </div>
+            `;
+            
+            updateTestStatus('测试环境已重置，可以开始新的测试', 'info');
+        }
+
+        // 模拟甘特图缩放函数
+        function testAdjustGanttZoom(zoomLevel) {
+            console.log('测试甘特图缩放:', zoomLevel);
+            updateTestStatus(`甘特图缩放功能测试: ${zoomLevel}视图`, 'info');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTestStatus('测试页面已加载，可以开始测试修复效果', 'success');
+            
+            // 模拟一些分析数据
+            window.analysisData = {
+                scrumData: [
+                    {
+                        key: 'procurement',
+                        name: '采购部门',
+                        icon: 'fas fa-shopping-cart',
+                        tasks: [
+                            { name: '绿色供应商筛选', deadline: '2024-02-15' },
+                            { name: '采购流程优化', deadline: '2024-02-20' }
+                        ]
+                    }
+                ]
+            };
+        });
+    </script>
+</body>
+</html>

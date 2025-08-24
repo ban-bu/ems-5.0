@@ -1,0 +1,38 @@
+{
+  "name": "ems-carbon-management-system",
+  "version": "2.1.0",
+  "description": "企业碳排放管理系统 - 集成Kanban分析、Lean优化和Scrum执行的综合平台",
+  "main": "server.js",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'Build complete'",
+    "test": "echo 'No tests specified' && exit 0"
+  },
+  "keywords": [
+    "carbon-emissions",
+    "management-system",
+    "lean",
+    "kanban",
+    "scrum",
+    "sustainability"
+  ],
+  "author": "EMS Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4",
+    "helmet": "^7.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "morgan": "^1.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/ems-2.1"
+  },
+  "homepage": "https://your-app-name.railway.app"
+}

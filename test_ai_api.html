@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI API 测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI API 连接测试</h1>
+        
+        <div class="test-section">
+            <h3>测试配置</h3>
+            <p><strong>API端点:</strong> <span id="apiEndpoint">https://api.modelscope.cn/v1/chat/completions</span></p>
+            <p><strong>模型:</strong> <span id="modelName">deepseek-ai/DeepSeek-V3.1</span></p>
+            <p><strong>Token:</strong> <span id="tokenStatus">已配置</span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>快速测试</h3>
+            <button onclick="testBasicConnection()">测试基础连接</button>
+            <button onclick="testSimpleChat()">测试简单对话</button>
+            <button onclick="testCarbonAnalysis()">测试碳排放分析</button>
+            <button onclick="testAllAPIs()">测试所有接口</button>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>详细日志</h3>
+            <div id="detailLog" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        // API配置
+        const API_CONFIG = {
+            endpoint: 'https://api.modelscope.cn/v1/chat/completions',
+            token: 'ms-150d583e-ed00-46d3-ab35-570f03555599', // 从您的代码中提取的token
+            model: 'deepseek-ai/DeepSeek-V3.1'
+        };
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('detailLog');
+            const typeIcon = {
+                'info': 'ℹ️',
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️'
+            };
+            logDiv.innerHTML += `[${timestamp}] ${typeIcon[type]} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `test-section ${type}`;
+            element.innerHTML = `<h3>测试结果</h3><p>${message}</p>`;
+        }
+
+        // 测试基础连接
+        async function testBasicConnection() {
+            log('开始测试基础连接...', 'info');
+            showResult('testResults', '正在测试连接...', 'loading');
+
+            try {
+                const response = await fetch(API_CONFIG.endpoint, {
+                    method: 'OPTIONS'
+                });
+                
+                log(`基础连接测试 - 状态码: ${response.status}`, 'info');
+                showResult('testResults', '基础连接测试完成，检查详细日志', 'success');
+            } catch (error) {
+                log(`基础连接失败: ${error.message}`, 'error');
+                showResult('testResults', `连接失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试简单对话
+        async function testSimpleChat() {
+            log('开始测试简单对话...', 'info');
+            showResult('testResults', '正在测试AI对话...', 'loading');
+
+            try {
+                const response = await fetch(API_CONFIG.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.token}`
+                    },
+                    body: JSON.stringify({
+                        model: API_CONFIG.model,
+                        messages: [{
+                            role: 'user',
+                            content: '你好，请回答：1+1等于几？'
+                        }],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                log(`API响应状态: ${response.status}`, 'info');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`API错误响应: ${errorText}`, 'error');
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                log(`API响应成功，内容: ${JSON.stringify(data, null, 2)}`, 'success');
+                
+                const aiResponse = data.choices?.[0]?.message?.content || '无响应内容';
+                showResult('testResults', `AI回答: ${aiResponse}`, 'success');
+
+            } catch (error) {
+                log(`简单对话测试失败: ${error.message}`, 'error');
+                showResult('testResults', `对话测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试碳排放分析
+        async function testCarbonAnalysis() {
+            log('开始测试碳排放分析...', 'info');
+            showResult('testResults', '正在测试碳排放分析...', 'loading');
+
+            const prompt = `
+请分析以下产品的碳排放优化建议：
+
+产品信息：
+- 产品名称: EPP泡沫护具
+- 原材料: 可发性聚丙烯
+- 生产工艺: 发泡成型
+- 包装方案: 纸箱包装
+
+请提供3个具体的优化建议，格式为JSON。
+            `.trim();
+
+            try {
+                const response = await fetch(API_CONFIG.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.token}`
+                    },
+                    body: JSON.stringify({
+                        model: API_CONFIG.model,
+                        messages: [{
+                            role: 'user',
+                            content: prompt
+                        }],
+                        max_tokens: 1000,
+                        temperature: 0.7
+                    })
+                });
+
+                log(`碳排放分析API状态: ${response.status}`, 'info');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`碳排放分析API错误: ${errorText}`, 'error');
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                const analysis = data.choices?.[0]?.message?.content || '无分析结果';
+                
+                log(`碳排放分析成功: ${analysis.substring(0, 200)}...`, 'success');
+                showResult('testResults', `分析结果: ${analysis.substring(0, 300)}...`, 'success');
+
+            } catch (error) {
+                log(`碳排放分析失败: ${error.message}`, 'error');
+                showResult('testResults', `分析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试所有API接口
+        async function testAllAPIs() {
+            log('开始完整API测试...', 'info');
+            showResult('testResults', '正在执行完整测试...', 'loading');
+
+            const tests = [
+                { name: '基础连接', func: testBasicConnection },
+                { name: '简单对话', func: testSimpleChat },
+                { name: '碳排放分析', func: testCarbonAnalysis }
+            ];
+
+            let passedTests = 0;
+            for (const test of tests) {
+                try {
+                    log(`执行测试: ${test.name}`, 'info');
+                    await test.func();
+                    passedTests++;
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒
+                } catch (error) {
+                    log(`测试${test.name}失败: ${error.message}`, 'error');
+                }
+            }
+
+            const result = `完整测试完成: ${passedTests}/${tests.length} 通过`;
+            log(result, passedTests === tests.length ? 'success' : 'warning');
+            showResult('testResults', result, passedTests === tests.length ? 'success' : 'error');
+        }
+
+        // 页面加载时显示配置信息
+        window.onload = function() {
+            document.getElementById('apiEndpoint').textContent = API_CONFIG.endpoint;
+            document.getElementById('modelName').textContent = API_CONFIG.model;
+            document.getElementById('tokenStatus').textContent = API_CONFIG.token ? '已配置' : '未配置';
+            log('AI API测试页面已加载', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI功能测试</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        
+        /* 建议卡片样式 */
+        .suggestion-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+        }
+        
+        .suggestion-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .suggestion-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .suggestion-title h5 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .improvement-metrics {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .time-improvement, .carbon-reduction {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .time-improvement i {
+            color: #ffc107;
+        }
+        
+        .carbon-reduction i {
+            color: #28a745;
+        }
+        
+        .suggestion-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .suggestion-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .loading-suggestions {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .loading-suggestions i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI功能测试页面</h1>
+    
+    <div class="test-section">
+        <h3>测试1: 检查函数是否正确定义</h3>
+        <button onclick="testFunctionDefinition()">检查函数定义</button>
+        <div id="function-test-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试2: 测试AI API调用</h3>
+        <button onclick="testAIApi()">测试AI API</button>
+        <div id="api-test-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试3: 测试个性化建议生成</h3>
+        <button onclick="testPersonalizedSuggestions()">测试建议生成</button>
+        <div id="suggestions-test-result" class="result"></div>
+    </div>
+
+    <script>
+        // 模拟必要的全局变量和函数
+        window.currentAnalysis = {
+            documentType: 'electronics'
+        };
+        
+        window.documentAIContent = {
+            content: '这是一个电子产品设计方案，包含电路设计、外壳设计等内容。'
+        };
+        
+        window.supplementData = {
+            '供应商地理位置信息': '广东深圳',
+            '原材料具体规格和来源': '芯片-台积电，金属外壳-富士康'
+        };
+        
+        function getDocumentTypeName(type) {
+            const typeMap = {
+                'electronics': '电子产品',
+                'textile': '纺织产品',
+                'automotive': '汽车产品',
+                'general': '通用产品'
+            };
+            return typeMap[type] || '通用产品';
+        }
+        
+        // 定义我们需要的函数
+        window.generatePersonalizedSuggestions = async function(area) {
+            console.log('开始生成个性化建议:', area);
+            
+            const suggestionsDiv = document.getElementById('suggestionsContent');
+            if (!suggestionsDiv) {
+                console.error('找不到suggestionsContent元素');
+                return;
+            }
+
+            // 显示加载状态
+            suggestionsDiv.innerHTML = `
+                <div class="loading-suggestions">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>AI正在分析${area}领域，生成个性化优化建议...</p>
+                </div>
+            `;
+
+            try {
+                // 获取当前文档和产品信息
+                const documentContent = window.documentAIContent?.content || '';
+                const supplementData = window.supplementData || {};
+                const productType = window.currentAnalysis?.documentType || 'general';
+                const productTypeName = getDocumentTypeName(productType);
+                
+                console.log('产品信息:', {
+                    productType,
+                    productTypeName,
+                    documentContentLength: documentContent.length,
+                    supplementDataKeys: Object.keys(supplementData)
+                });
+
+                // 构建AI提示词
+                const prompt = `作为碳排放管理和精益生产专家，请为${productTypeName}产品的${area}领域生成3个具体的优化建议。
+
+【产品信息】：
+产品类型：${productTypeName}
+文档内容：${documentContent.substring(0, 300)}...
+补充信息：${Object.entries(supplementData).map(([key, value]) => `${key}: ${value}`).join(', ')}
+
+【优化领域】：${area}
+
+请为每个建议提供以下信息（JSON格式）：
+{
+  "suggestions": [
+    {
+      "icon": "对应的FontAwesome图标类名",
+      "title": "建议标题",
+      "timeImprovement": "具体的时间改进效果",
+      "carbonReduction": "具体的碳排放减少效果", 
+      "desc": "详细的建议描述",
+      "subProject": "子项目名称"
+    }
+  ]
+}
+
+要求：
+1. 建议必须针对${productTypeName}产品的${area}特点
+2. 提供具体可量化的改进效果
+3. 建议要实用可行
+4. 考虑当前产品的实际情况
+5. 只返回JSON格式，不要其他文字`;
+
+                console.log('AI提示词:', prompt);
+
+                // 调用真实AI API
+                console.log('开始调用AI API...');
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Client-Request': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-ai/DeepSeek-V3.1',
+                        messages: [{
+                            role: 'user',
+                            content: prompt
+                        }],
+                        max_tokens: 1500,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('AI API响应错误:', response.status, response.statusText);
+                    throw new Error('AI API调用失败');
+                }
+
+                const data = await response.json();
+                console.log('AI API响应数据:', data);
+                const aiResponse = data.choices[0].message.content;
+                console.log('AI返回内容:', aiResponse);
+
+                // 解析AI返回的JSON
+                let suggestions;
+                try {
+                    // 尝试提取JSON部分
+                    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        console.log('提取的JSON:', jsonMatch[0]);
+                        suggestions = JSON.parse(jsonMatch[0]);
+                        console.log('解析后的建议:', suggestions);
+                    } else {
+                        console.error('未找到JSON格式内容');
+                        throw new Error('无法解析AI返回的JSON');
+                    }
+                } catch (parseError) {
+                    console.error('AI返回内容解析失败:', parseError);
+                    console.error('AI返回内容:', aiResponse);
+                    // 使用备用建议
+                    suggestions = getFallbackSuggestions(area, productTypeName);
+                }
+
+                // 渲染建议
+                console.log('开始渲染建议:', area, suggestions);
+                renderSuggestions(area, suggestions.suggestions || suggestions);
+
+            } catch (error) {
+                console.error('AI API调用失败:', error);
+                // 使用备用建议
+                const productTypeName = getDocumentTypeName(window.currentAnalysis?.documentType || 'general');
+                console.log('使用备用建议:', area, productTypeName);
+                const fallbackSuggestions = getFallbackSuggestions(area, productTypeName);
+                console.log('备用建议内容:', fallbackSuggestions);
+                renderSuggestions(area, fallbackSuggestions);
+            }
+        };
+        
+        // 渲染建议内容
+        window.renderSuggestions = function(area, suggestions) {
+            const suggestionsDiv = document.getElementById('suggestionsContent');
+            const areaAccepted = []; // 简化版本
+
+            let suggestionContent = `
+                <div class="analysis-header">
+                    <h4><i class="fas fa-lightbulb"></i> ${area}优化建议</h4>
+                    <p class="text-muted">AI基于您的产品特点，为${area}领域生成的个性化优化措施：</p>
+                </div>
+                <div class="suggestions-grid">
+            `;
+            
+            suggestions.forEach((suggestion, index) => {
+                const isAccepted = false; // 简化版本
+                suggestionContent += `
+                    <div class="suggestion-card ${isAccepted ? 'accepted' : ''}">
+                        <div class="suggestion-header">
+                            <div class="suggestion-icon">
+                                <i class="${suggestion.icon || 'fas fa-lightbulb'}"></i>
+                            </div>
+                            <div class="suggestion-title">
+                                <h5>${suggestion.title}</h5>
+                                <div class="improvement-metrics">
+                                    <span class="time-improvement"><i class="fas fa-clock"></i> ${suggestion.timeImprovement}</span>
+                                    <span class="carbon-reduction"><i class="fas fa-leaf"></i> ${suggestion.carbonReduction}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="suggestion-content">
+                            <p>${suggestion.desc}</p>
+                            <div class="suggestion-actions">
+                                <button class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> 采纳建议
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-robot"></i> 询问AI
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            suggestionContent += `
+                </div>
+            `;
+            
+            suggestionsDiv.innerHTML = suggestionContent;
+        };
+        
+        // 备用建议生成函数
+        window.getFallbackSuggestions = function(area, productTypeName) {
+            const fallbackSuggestions = {
+                '材料选择': [
+                    {
+                        icon: 'fas fa-seedling',
+                        title: `${productTypeName}生物基材料替代`,
+                        timeImprovement: '减少25%加工时间',
+                        carbonReduction: '降低60%材料排放',
+                        desc: `针对${productTypeName}特点，采用生物降解材料替代传统材料，减少化学处理工序和环境影响`,
+                        subProject: '生物基材料选择'
+                    },
+                    {
+                        icon: 'fas fa-recycle',
+                        title: `${productTypeName}循环材料应用`,
+                        timeImprovement: '节省30%制备时间',
+                        carbonReduction: '减少50%原料排放',
+                        desc: `建立${productTypeName}闭环材料循环体系，实现废料再利用，降低原材料采购成本`,
+                        subProject: '回收材料应用'
+                    },
+                    {
+                        icon: 'fas fa-feather-alt',
+                        title: `${productTypeName}轻量化设计`,
+                        timeImprovement: '缩短20%运输时间',
+                        carbonReduction: '降低40%物流排放',
+                        desc: `采用轻量化材料和结构设计，减少${productTypeName}运输成本和排放`,
+                        subProject: '轻量化结构设计'
+                    }
+                ],
+                '生产工艺': [
+                    {
+                        icon: 'fas fa-cogs',
+                        title: `${productTypeName}精益生产流程`,
+                        timeImprovement: '缩短35%生产周期',
+                        carbonReduction: '降低40%工艺排放',
+                        desc: `针对${productTypeName}特点实施精益生产理念，消除浪费和冗余工序`,
+                        subProject: '精益生产流程'
+                    },
+                    {
+                        icon: 'fas fa-bolt',
+                        title: `${productTypeName}清洁能源转换`,
+                        timeImprovement: '减少15%能耗时间',
+                        carbonReduction: '降低70%能源排放',
+                        desc: `为${productTypeName}生产采用太阳能、风能等清洁能源替代传统能源`,
+                        subProject: '清洁能源转换'
+                    },
+                    {
+                        icon: 'fas fa-fire',
+                        title: `${productTypeName}余热回收系统`,
+                        timeImprovement: '提升30%能效',
+                        carbonReduction: '减少35%热能损失',
+                        desc: `安装${productTypeName}余热回收系统，提高能源利用效率`,
+                        subProject: '余热回收系统'
+                    }
+                ]
+            };
+
+            return fallbackSuggestions[area] || fallbackSuggestions['材料选择'];
+        };
+        
+        // 测试函数定义
+        function testFunctionDefinition() {
+            const result = document.getElementById('function-test-result');
+            let output = '';
+            
+            // 检查函数是否存在
+            if (typeof window.generatePersonalizedSuggestions === 'function') {
+                output += '✅ generatePersonalizedSuggestions 函数已定义\n';
+            } else {
+                output += '❌ generatePersonalizedSuggestions 函数未定义\n';
+            }
+            
+            if (typeof window.renderSuggestions === 'function') {
+                output += '✅ renderSuggestions 函数已定义\n';
+            } else {
+                output += '❌ renderSuggestions 函数未定义\n';
+            }
+            
+            if (typeof window.getFallbackSuggestions === 'function') {
+                output += '✅ getFallbackSuggestions 函数已定义\n';
+            } else {
+                output += '❌ getFallbackSuggestions 函数未定义\n';
+            }
+            
+            result.textContent = output;
+        }
+        
+        // 测试AI API
+        async function testAIApi() {
+            const result = document.getElementById('api-test-result');
+            result.textContent = '正在测试AI API...';
+            
+            try {
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Client-Request': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-ai/DeepSeek-V3.1',
+                        messages: [{
+                            role: 'user',
+                            content: '请简单回答：你好'
+                        }],
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.textContent = '✅ AI API调用成功\n响应: ' + JSON.stringify(data, null, 2);
+                } else {
+                    result.textContent = '❌ AI API调用失败\n状态: ' + response.status + ' ' + response.statusText;
+                }
+            } catch (error) {
+                result.textContent = '❌ AI API调用出错\n错误: ' + error.message;
+            }
+        }
+        
+        // 测试个性化建议生成
+        async function testPersonalizedSuggestions() {
+            const result = document.getElementById('suggestions-test-result');
+            result.textContent = '正在测试个性化建议生成...';
+            
+            try {
+                if (typeof window.generatePersonalizedSuggestions === 'function') {
+                    // 创建一个临时的DOM元素
+                    const tempDiv = document.createElement('div');
+                    tempDiv.id = 'suggestionsContent';
+                    document.body.appendChild(tempDiv);
+                    
+                    // 调用函数
+                    await window.generatePersonalizedSuggestions('材料选择');
+                    
+                    // 检查结果
+                    const content = tempDiv.innerHTML;
+                    if (content.includes('AI正在分析') || content.includes('建议')) {
+                        result.textContent = '✅ 个性化建议生成成功\n内容预览: ' + content.substring(0, 200) + '...';
+                    } else {
+                        result.textContent = '⚠️ 建议生成可能有问题\n内容: ' + content;
+                    }
+                    
+                    // 清理临时元素
+                    document.body.removeChild(tempDiv);
+                } else {
+                    result.textContent = '❌ generatePersonalizedSuggestions 函数未定义';
+                }
+            } catch (error) {
+                result.textContent = '❌ 测试失败\n错误: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

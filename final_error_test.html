@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终错误修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .warning {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        #error-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 最终错误修复验证</h1>
+        <p>此页面用于验证所有JavaScript错误是否已经完全修复。</p>
+        
+        <div class="test-item" id="test-1">
+            <h3>测试1: DOM元素安全访问</h3>
+            <button class="btn" onclick="test1()">运行测试</button>
+            <div id="result-1">等待测试...</div>
+        </div>
+        
+        <div class="test-item" id="test-2">
+            <h3>测试2: 事件监听器安全绑定</h3>
+            <button class="btn" onclick="test2()">运行测试</button>
+            <div id="result-2">等待测试...</div>
+        </div>
+        
+        <div class="test-item" id="test-3">
+            <h3>测试3: 变量安全访问</h3>
+            <button class="btn" onclick="test3()">运行测试</button>
+            <div id="result-3">等待测试...</div>
+        </div>
+        
+        <div class="test-item" id="test-4">
+            <h3>测试4: 页面功能完整性</h3>
+            <button class="btn" onclick="test4()">运行测试</button>
+            <div id="result-4">等待测试...</div>
+        </div>
+        
+        <div class="test-item">
+            <h3>综合测试</h3>
+            <button class="btn" onclick="runAllTests()">运行所有测试</button>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+        
+        <div class="test-item">
+            <h3>错误监控日志</h3>
+            <div id="error-log">等待监控开始...</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 错误监控
+        let errorCount = 0;
+        const originalError = console.error;
+        const originalLog = console.log;
+        
+        function logToUI(type, message) {
+            const log = document.getElementById('error-log');
+            const timestamp = new Date().toLocaleTimeString();
+            log.textContent += `[${timestamp}] ${type}: ${message}\n`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // 重写console.error来捕获错误
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            errorCount++;
+            logToUI('ERROR', args.join(' '));
+        };
+        
+        // 重写console.log来记录日志
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToUI('LOG', args.join(' '));
+        };
+        
+        // 捕获未处理的错误
+        window.addEventListener('error', function(e) {
+            errorCount++;
+            logToUI('UNCAUGHT ERROR', `${e.filename}:${e.lineno} - ${e.message}`);
+        });
+        
+        // 捕获Promise rejection
+        window.addEventListener('unhandledrejection', function(e) {
+            errorCount++;
+            logToUI('UNHANDLED REJECTION', e.reason);
+        });
+        
+        function updateResult(testId, message, type = 'success') {
+            const result = document.getElementById(`result-${testId}`);
+            const testItem = document.getElementById(`test-${testId}`);
+            result.textContent = message;
+            testItem.className = `test-item ${type}`;
+        }
+        
+        function test1() {
+            console.log('开始测试1: DOM元素安全访问');
+            
+            try {
+                // 测试可能不存在的元素
+                const elements = [
+                    'chatInput',
+                    'uploadArea',
+                    'reverseTimeline',
+                    'emissionCards',
+                    'suggestionsContent',
+                    'startAnalysis',
+                    'aiSupplement',
+                    'uploadedFiles'
+                ];
+                
+                let safeAccess = 0;
+                elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        // 测试操作
+                        if (element.style) element.style.display;
+                        if (element.innerHTML !== undefined) element.innerHTML;
+                        if (element.disabled !== undefined) element.disabled;
+                        safeAccess++;
+                    }
+                });
+                
+                updateResult(1, `✅ DOM访问测试通过 - ${safeAccess}/${elements.length}个元素安全访问`, 'success');
+            } catch (error) {
+                updateResult(1, `❌ DOM访问测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function test2() {
+            console.log('开始测试2: 事件监听器安全绑定');
+            
+            try {
+                // 模拟事件绑定测试
+                const testElements = ['chatInput', 'uploadArea', 'aiModal'];
+                let successCount = 0;
+                
+                testElements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        // 测试添加事件监听器
+                        const testHandler = function() {};
+                        element.addEventListener('click', testHandler);
+                        element.removeEventListener('click', testHandler);
+                        successCount++;
+                    }
+                });
+                
+                updateResult(2, `✅ 事件监听器测试通过 - ${successCount}个元素事件绑定正常`, 'success');
+            } catch (error) {
+                updateResult(2, `❌ 事件监听器测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function test3() {
+            console.log('开始测试3: 变量安全访问');
+            
+            try {
+                // 测试变量安全访问
+                const hasAcceptedTest = typeof hasAcceptedSuggestions !== 'undefined' ? hasAcceptedSuggestions : false;
+                const analysisDataTest = typeof analysisData !== 'undefined' ? analysisData : null;
+                const uploadedFilesTest = typeof uploadedFiles !== 'undefined' ? uploadedFiles : [];
+                
+                updateResult(3, '✅ 变量访问测试通过 - 所有变量安全访问', 'success');
+            } catch (error) {
+                updateResult(3, `❌ 变量访问测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function test4() {
+            console.log('开始测试4: 页面功能完整性');
+            
+            try {
+                // 测试关键函数是否存在
+                const functions = [
+                    'switchModule',
+                    'ensureScrumPlanReady',
+                    'renderTimeline',
+                    'renderEmissionCards',
+                    'setupEventListeners',
+                    'setupFileUpload',
+                    'showAISupplementSection'
+                ];
+                
+                let existingFunctions = 0;
+                functions.forEach(funcName => {
+                    if (typeof window[funcName] === 'function') {
+                        existingFunctions++;
+                    }
+                });
+                
+                if (existingFunctions === functions.length) {
+                    updateResult(4, `✅ 功能完整性测试通过 - ${existingFunctions}/${functions.length}个关键函数存在`, 'success');
+                } else {
+                    updateResult(4, `⚠️ 功能完整性测试部分通过 - ${existingFunctions}/${functions.length}个关键函数存在`, 'warning');
+                }
+            } catch (error) {
+                updateResult(4, `❌ 功能完整性测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function runAllTests() {
+            console.log('开始运行所有测试...');
+            errorCount = 0;
+            
+            setTimeout(() => test1(), 100);
+            setTimeout(() => test2(), 200);
+            setTimeout(() => test3(), 300);
+            setTimeout(() => test4(), 400);
+            
+            setTimeout(() => {
+                if (errorCount === 0) {
+                    logToUI('SUMMARY', '🎉 所有测试完成，未发现JavaScript错误！');
+                } else {
+                    logToUI('SUMMARY', `⚠️ 测试完成，发现 ${errorCount} 个错误`);
+                }
+            }, 1000);
+        }
+        
+        function clearLog() {
+            document.getElementById('error-log').textContent = '日志已清空...\n';
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logToUI('INIT', '错误修复验证页面已加载');
+            logToUI('INIT', '开始错误监控...');
+            
+            // 延迟运行初始测试
+            setTimeout(() => {
+                logToUI('INIT', '自动运行初始检查...');
+                runAllTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

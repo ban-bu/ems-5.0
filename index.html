@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>碳排放管理系统 - EMS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-leaf"></i>
+                <span>碳排放管理系统</span>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-module="upload">文档上传</button>
+                <button class="nav-tab" data-module="kanban">Kanban分析</button>
+                <button class="nav-tab" data-module="lean">Lean优化</button>
+                <button class="nav-tab" data-module="scrum">Scrum执行</button>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 文档上传模块 -->
+            <div id="upload-module" class="module active">
+                <div class="module-header">
+                    <h2><i class="fas fa-upload"></i> 产品设计方案上传</h2>
+                    <p>上传您的产品设计方案，系统将自动分析碳排放并优化生产流程</p>
+                </div>
+                
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>拖拽文件到此处或点击上传</h3>
+                        <p>支持 PDF, DOC, DOCX, TXT 格式</p>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            选择文件
+                        </button>
+                    </div>
+                    
+                    <div class="uploaded-files" id="uploadedFiles" style="display: none;">
+                        <h4>已上传文件</h4>
+                        <div class="file-list" id="fileList"></div>
+                    </div>
+                </div>
+
+                <!-- AI补充信息区域 -->
+                <div class="ai-supplement" id="aiSupplement" style="display: none;">
+                    <div class="ai-chat">
+                        <div class="chat-header">
+                            <i class="fas fa-robot"></i>
+                            <span>AI助手 - 补充缺失信息</span>
+                        </div>
+                        <div class="chat-messages" id="chatMessages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="请回答AI的问题...">
+                            <button class="btn btn-primary" onclick="sendMessage()">发送</button>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-success" id="startAnalysis" onclick="startAnalysis()" disabled>
+                            <i class="fas fa-play"></i> 开始分析
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanban模块 -->
+            <div id="kanban-module" class="module">
+                <div class="module-header">
+                    <h2><i class="fas fa-chart-line"></i> Kanban 碳排放分析</h2>
+                    <p>产品生命周期碳排放预测与逆时间线展示</p>
+                </div>
+                
+                <div class="timeline-container">
+                    <h3>产品生命周期逆时间线</h3>
+                    <div class="reverse-timeline" id="reverseTimeline">
+                        <!-- 时间线节点将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="emission-analysis">
+                    <h3>各环节碳排放分析</h3>
+                    <div class="emission-cards" id="emissionCards">
+                        <!-- 排放卡片将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lean模块 -->
+            <div id="lean-module" class="module">
+                <div class="module-header">
+                    <h2><i class="fas fa-lightbulb"></i> Lean 优化分析</h2>
+                    <p>深度分析高排放原因并提供优化建议</p>
+                </div>
+                
+                <div class="analysis-content" id="leanAnalysis">
+                    <div class="analysis-placeholder">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <p>请在Kanban模块中点击特定的排放数据来开始分析</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrum模块 -->
+            <div id="scrum-module" class="module">
+                <div class="module-header">
+                    <h2><i class="fas fa-tasks"></i> Scrum 执行跟踪</h2>
+                    <p>各部门任务分配与进度监控</p>
+                </div>
+                
+                <div class="scrum-content" id="scrumContent">
+                    <div class="scrum-placeholder">
+                        <i class="fas fa-clipboard-check"></i>
+                        <p>请先完成Lean优化分析并确认方案</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI对话弹窗 -->
+    <div class="modal" id="aiModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-robot"></i> AI分析助手</h3>
+                <button class="close-btn" onclick="closeAiModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="selected-data" id="selectedData"></div>
+                <div class="ai-question">
+                    <label for="aiQuestion">请输入您的问题：</label>
+                    <textarea id="aiQuestion" placeholder="例如：为什么这个环节的排放量这么高？"></textarea>
+                    <button class="btn btn-primary" onclick="askAI()">询问AI</button>
+                </div>
+                <div class="ai-response" id="aiResponse" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Mammoth.js库用于DOCX文件解析 -->
+    <script src="https://unpkg.com/mammoth@1.4.21/mammoth.browser.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

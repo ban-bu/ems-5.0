@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试改进版页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        #console-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 改进版页面测试</h1>
+        <p>此页面用于测试 <strong>index_improved.html</strong> 是否能正常工作，没有JavaScript错误。</p>
+        
+        <div class="test-section">
+            <h3>测试状态</h3>
+            <div class="status" id="overall-status">准备开始测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>页面链接</h3>
+            <p>点击下面的链接打开改进版页面：</p>
+            <a href="index_improved.html" target="_blank" class="test-button">
+                🚀 打开 index_improved.html
+            </a>
+            <button class="test-button" onclick="testPageLoad()">
+                🔍 测试页面加载
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h3>错误监控</h3>
+            <p>JavaScript错误和警告将在下方显示：</p>
+            <div id="console-log">等待监控开始...</div>
+            <button class="test-button" onclick="clearLog()">清空日志</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>功能测试指南</h3>
+            <p>在改进版页面中，请测试以下功能：</p>
+            <ul>
+                <li>✅ 页面加载无JavaScript错误</li>
+                <li>✅ 从 Lean 页面切换到 Scrum 页面</li>
+                <li>✅ 甘特图加载提示正确显示</li>
+                <li>✅ AI对话功能正常工作</li>
+                <li>✅ 文件上传功能正常</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let errorCount = 0;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const originalLog = console.log;
+        
+        function logToConsole(type, message) {
+            const log = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            log.textContent += `[${timestamp}] ${type}: ${message}\n`;
+            log.scrollTop = log.scrollHeight;
+            
+            updateOverallStatus();
+        }
+        
+        // 重写console方法来捕获输出
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            errorCount++;
+            logToConsole('ERROR', args.join(' '));
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logToConsole('WARN', args.join(' '));
+        };
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToConsole('LOG', args.join(' '));
+        };
+        
+        // 捕获全局错误
+        window.addEventListener('error', function(e) {
+            errorCount++;
+            logToConsole('UNCAUGHT ERROR', `${e.filename}:${e.lineno} - ${e.message}`);
+        });
+        
+        // 捕获Promise错误
+        window.addEventListener('unhandledrejection', function(e) {
+            errorCount++;
+            logToConsole('PROMISE REJECTION', e.reason);
+        });
+        
+        function updateOverallStatus() {
+            const status = document.getElementById('overall-status');
+            if (errorCount === 0) {
+                status.textContent = '✅ 运行正常，未发现错误';
+                status.className = 'status success';
+            } else {
+                status.textContent = `⚠️ 发现 ${errorCount} 个错误`;
+                status.className = 'status error';
+            }
+        }
+        
+        function testPageLoad() {
+            logToConsole('TEST', '开始测试页面加载...');
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'index_improved.html';
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    logToConsole('TEST', 'index_improved.html 页面加载完成');
+                    document.body.removeChild(iframe);
+                }, 2000);
+            };
+            
+            iframe.onerror = function() {
+                logToConsole('TEST', 'index_improved.html 页面加载失败');
+                document.body.removeChild(iframe);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+        
+        function clearLog() {
+            document.getElementById('console-log').textContent = '日志已清空...\n';
+            errorCount = 0;
+            updateOverallStatus();
+        }
+        
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('INIT', '测试页面已加载，开始监控错误...');
+            updateOverallStatus();
+        });
+    </script>
+</body>
+</html>

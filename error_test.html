@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误修复测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        #console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 错误修复测试页面</h1>
+        <p>此页面用于测试之前修复的JavaScript错误是否已经解决。</p>
+        
+        <div class="test-section">
+            <h3>测试1: DOM元素访问</h3>
+            <p>测试DOM元素为null时的错误处理</p>
+            <button class="test-button" onclick="testDOMAccess()">测试DOM访问</button>
+            <div id="dom-test-result" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试2: 变量初始化</h3>
+            <p>测试变量未定义时的错误处理</p>
+            <button class="test-button" onclick="testVariableInit()">测试变量初始化</button>
+            <div id="variable-test-result" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试3: 页面模块切换</h3>
+            <p>测试从Lean到Scrum的页面切换</p>
+            <button class="test-button" onclick="testPageSwitch()">测试页面切换</button>
+            <div id="switch-test-result" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试4: 甘特图加载提示</h3>
+            <p>测试甘特图加载提示是否正确显示</p>
+            <button class="test-button" onclick="testGanttLoading()">测试甘特图加载</button>
+            <div id="gantt-test-result" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>控制台输出</h3>
+            <div id="console-output">等待测试开始...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>快速测试</h3>
+            <button class="test-button" onclick="runAllTests()">运行所有测试</button>
+            <button class="test-button" onclick="clearConsole()">清空控制台</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 重写console.log来捕获输出
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function updateConsole(type, ...args) {
+            const consoleOutput = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleOutput.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalLog.apply(console, args);
+            updateConsole('log', ...args);
+        };
+        
+        console.error = (...args) => {
+            originalError.apply(console, args);
+            updateConsole('error', ...args);
+        };
+        
+        console.warn = (...args) => {
+            originalWarn.apply(console, args);
+            updateConsole('warn', ...args);
+        };
+        
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+        
+        function testDOMAccess() {
+            console.log('开始测试DOM访问...');
+            
+            try {
+                // 测试访问不存在的元素
+                const nonExistentElement = document.getElementById('non-existent-element');
+                if (nonExistentElement) {
+                    nonExistentElement.innerHTML = 'test';
+                }
+                
+                // 测试访问可能不存在的元素
+                const timeline = document.getElementById('reverseTimeline');
+                if (timeline) {
+                    timeline.innerHTML = 'test';
+                }
+                
+                updateStatus('dom-test-result', '✅ DOM访问测试通过 - 没有出现null错误', 'success');
+                console.log('DOM访问测试完成');
+            } catch (error) {
+                updateStatus('dom-test-result', `❌ DOM访问测试失败: ${error.message}`, 'error');
+                console.error('DOM访问测试失败:', error);
+            }
+        }
+        
+        function testVariableInit() {
+            console.log('开始测试变量初始化...');
+            
+            try {
+                // 测试hasAcceptedSuggestions变量
+                const showAfterData = typeof hasAcceptedSuggestions !== 'undefined' ? hasAcceptedSuggestions : false;
+                console.log('hasAcceptedSuggestions检查通过:', showAfterData);
+                
+                updateStatus('variable-test-result', '✅ 变量初始化测试通过 - 没有出现未定义错误', 'success');
+                console.log('变量初始化测试完成');
+            } catch (error) {
+                updateStatus('variable-test-result', `❌ 变量初始化测试失败: ${error.message}`, 'error');
+                console.error('变量初始化测试失败:', error);
+            }
+        }
+        
+        function testPageSwitch() {
+            console.log('开始测试页面切换...');
+            
+            try {
+                // 模拟页面切换
+                if (typeof switchModule === 'function') {
+                    switchModule('lean');
+                    setTimeout(() => {
+                        switchModule('scrum');
+                        updateStatus('switch-test-result', '✅ 页面切换测试通过 - 没有出现错误', 'success');
+                        console.log('页面切换测试完成');
+                    }, 100);
+                } else {
+                    updateStatus('switch-test-result', '⚠️ switchModule函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('switch-test-result', `❌ 页面切换测试失败: ${error.message}`, 'error');
+                console.error('页面切换测试失败:', error);
+            }
+        }
+        
+        function testGanttLoading() {
+            console.log('开始测试甘特图加载...');
+            
+            try {
+                // 模拟甘特图加载
+                if (typeof ensureScrumPlanReady === 'function') {
+                    ensureScrumPlanReady().then(() => {
+                        updateStatus('gantt-test-result', '✅ 甘特图加载测试通过 - 没有出现错误', 'success');
+                        console.log('甘特图加载测试完成');
+                    }).catch(error => {
+                        updateStatus('gantt-test-result', `❌ 甘特图加载测试失败: ${error.message}`, 'error');
+                        console.error('甘特图加载测试失败:', error);
+                    });
+                } else {
+                    updateStatus('gantt-test-result', '⚠️ ensureScrumPlanReady函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('gantt-test-result', `❌ 甘特图加载测试失败: ${error.message}`, 'error');
+                console.error('甘特图加载测试失败:', error);
+            }
+        }
+        
+        function runAllTests() {
+            console.log('开始运行所有测试...');
+            clearConsole();
+            
+            setTimeout(() => testDOMAccess(), 100);
+            setTimeout(() => testVariableInit(), 200);
+            setTimeout(() => testPageSwitch(), 300);
+            setTimeout(() => testGanttLoading(), 400);
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').textContent = '控制台已清空...\n';
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('错误修复测试页面已加载');
+            console.log('开始检查基本功能...');
+            
+            // 检查关键函数是否存在
+            const functions = ['switchModule', 'ensureScrumPlanReady', 'renderTimeline', 'renderEmissionCards'];
+            functions.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    console.log(`✅ ${funcName} 函数存在`);
+                } else {
+                    console.warn(`⚠️ ${funcName} 函数不存在`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

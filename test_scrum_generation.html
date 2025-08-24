@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrum执行图生成功能测试</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #007bff;
+        }
+        
+        .test-section h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn.success {
+            background: #28a745;
+        }
+        
+        .btn.success:hover {
+            background: #218838;
+        }
+        
+        .btn.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn.warning:hover {
+            background: #e0a800;
+        }
+        
+        .output-box {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-running {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.1);
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .kanban-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .kanban-column {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .kanban-column h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .task-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .gantt-preview {
+            margin-top: 20px;
+        }
+        
+        .gantt-timeline {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+        
+        .gantt-bar {
+            height: 20px;
+            background: #007bff;
+            border-radius: 4px;
+            margin: 5px 0;
+            padding: 2px 8px;
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+        }
+        
+        kbd {
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #495057;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tasks"></i> Scrum执行图生成功能测试</h1>
+            <p>🤖 真实AI集成测试：文档处理 → AI补全 → AI Lean建议 → AI Scrum执行图</p>
+            <p style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                ✅ 完全对接真实AI API &nbsp;|&nbsp; ✅ 与主系统功能一致 &nbsp;|&nbsp; ✅ 包含容错回退机制
+            </p>
+            <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                <h4 style="margin: 0 0 10px 0; color: #1976d2;">
+                    <i class="fas fa-info-circle"></i> 控制台调试模式
+                </h4>
+                <p style="margin: 0; font-size: 14px; color: #424242;">
+                    📺 按 <kbd>F12</kbd> 打开浏览器控制台，查看所有AI调用的详细输入输出信息：
+                    <br>• AI提示词内容 • API请求参数 • AI返回结果 • 数据处理过程
+                </p>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- 总体控制面板 -->
+            <div class="test-section">
+                <h2><i class="fas fa-play-circle"></i> 测试控制面板</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <button class="btn success" onclick="runFullTest()">
+                        <i class="fas fa-rocket"></i> 运行完整测试
+                    </button>
+                    <button class="btn" onclick="runStepByStep()">
+                        <i class="fas fa-step-forward"></i> 分步执行
+                    </button>
+                    <button class="btn warning" onclick="resetTest()">
+                        <i class="fas fa-undo"></i> 重置测试
+                    </button>
+                    <span id="globalStatus" class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i> 待开始
+                    </span>
+                </div>
+                <div class="progress-bar">
+                    <div id="globalProgress" class="progress-fill"></div>
+                </div>
+            </div>
+            
+            <!-- 测试步骤 -->
+            <div class="test-grid">
+                <!-- 步骤1: 文档处理和AI补全 -->
+                <div class="test-card">
+                    <h3><i class="fas fa-file-upload"></i> 步骤1: 文档处理</h3>
+                    <p>🤖 EcoLoop文档上传 + 真实AI补全（调用DeepSeek-V3.1）</p>
+                    <button class="btn" onclick="testDocumentProcessing()">
+                        <i class="fas fa-upload"></i> 测试文档处理
+                    </button>
+                    <span id="step1Status" class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i> 待开始
+                    </span>
+                    <div id="step1Output" class="output-box" style="display: none;"></div>
+                </div>
+                
+                <!-- 步骤2: 数据分析 -->
+                <div class="test-card">
+                    <h3><i class="fas fa-chart-line"></i> 步骤2: 数据分析</h3>
+                    <p>📊 生成碳排放和时间线分析数据（基础数据准备）</p>
+                    <button class="btn" onclick="testDataAnalysis()">
+                        <i class="fas fa-analytics"></i> 测试数据分析
+                    </button>
+                    <span id="step2Status" class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i> 待开始
+                    </span>
+                    <div id="step2Output" class="output-box" style="display: none;"></div>
+                </div>
+                
+                <!-- 步骤3: Lean建议生成 -->
+                <div class="test-card">
+                    <h3><i class="fas fa-lightbulb"></i> 步骤3: Lean建议</h3>
+                    <p>🤖 真实AI生成3个领域优化建议（调用DeepSeek-V3.1）</p>
+                    <button class="btn" onclick="testLeanSuggestions()">
+                        <i class="fas fa-brain"></i> 测试Lean建议
+                    </button>
+                    <span id="step3Status" class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i> 待开始
+                    </span>
+                    <div id="step3Output" class="output-box" style="display: none;"></div>
+                </div>
+                
+                <!-- 步骤4: Scrum执行图生成 -->
+                <div class="test-card">
+                    <h3><i class="fas fa-tasks"></i> 步骤4: Scrum执行图</h3>
+                    <p>🤖 真实AI生成Scrum任务和甘特图（调用DeepSeek-V3.1）</p>
+                    <button class="btn" onclick="testScrumGeneration()">
+                        <i class="fas fa-project-diagram"></i> 测试Scrum生成
+                    </button>
+                    <span id="step4Status" class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i> 待开始
+                    </span>
+                    <div id="step4Output" class="output-box" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- 结果展示 -->
+            <div class="test-section">
+                <h2><i class="fas fa-chart-gantt"></i> 生成结果预览</h2>
+                <div id="resultPreview" style="display: none;">
+                    <h3>Kanban看板预览</h3>
+                    <div id="kanbanPreview" class="kanban-preview"></div>
+                    
+                    <h3>甘特图预览</h3>
+                    <div id="ganttPreview" class="gantt-preview"></div>
+                </div>
+                <div id="noResults" style="text-align: center; color: #6c757d; padding: 40px;">
+                    <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>运行测试后查看结果</p>
+                </div>
+            </div>
+            
+            <!-- AI提示词预览 -->
+            <div class="test-section">
+                <h2><i class="fas fa-robot"></i> AI提示词预览</h2>
+                <button class="btn" onclick="showAIPrompt()">
+                    <i class="fas fa-eye"></i> 查看最终提示词
+                </button>
+                <div id="aiPromptOutput" class="output-box" style="display: none;"></div>
+            </div>
+            
+            <!-- 测试日志 -->
+            <div class="test-section">
+                <h2><i class="fas fa-list"></i> 测试日志</h2>
+                <button class="btn" onclick="clearLog()">
+                    <i class="fas fa-trash"></i> 清空日志
+                </button>
+                <div id="testLog" class="output-box">
+                    === Scrum执行图生成功能测试日志 ===
+                    等待测试开始...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局测试状态
+        let testState = {
+            currentStep: 0,
+            totalSteps: 4,
+            documentContent: null,
+            supplementData: null,
+            analysisData: null,
+            leanSuggestions: null,
+            acceptedSuggestions: null,
+            scrumTasks: null,
+            testStartTime: null
+        };
+
+        // 模拟的EcoLoop电动汽车设计文档内容
+        const MOCK_ECOLOOP_DOCUMENT = {
+            title: "EcoLoop电动汽车设计规范",
+            content: `EcoLoop电动汽车设计规范
+
+产品概述：
+EcoLoop是一款面向城市通勤的纯电动汽车，采用轻量化设计理念，搭载先进的电池管理系统和智能驾驶辅助功能。
+
+技术规格：
+- 电池容量：60kWh三元锂电池组
+- 续航里程：NEDC工况下450km
+- 电机功率：前置单电机，最大功率150kW
+- 车身材料：铝合金车身框架，碳纤维覆盖件
+- 充电规格：支持快充（30分钟80%）和慢充
+
+设计要求：
+1. 轻量化设计：整车重量控制在1.5吨以内
+2. 可持续材料：优先使用可回收和生物基材料
+3. 制造工艺：采用精益生产流程，减少能耗和废料
+4. 供应链：建立本地化供应商网络，减少运输排放
+5. 包装方案：使用环保包装材料，建立包装回收体系
+
+环保目标：
+- 整车生命周期碳排放低于传统燃油车50%
+- 制造阶段能耗比行业平均水平降低30%
+- 材料回收率达到95%以上
+- 包装材料100%可回收或可降解
+
+制造流程：
+采购阶段 → 零部件制造 → 总装生产 → 质量检测 → 包装运输 → 交付使用 → 维护保养 → 回收处理
+
+创新特色：
+- 模块化电池设计，便于维护和升级
+- 智能能耗管理系统，实时优化能效
+- V2G技术，支持车辆向电网反向送电
+- OTA远程升级，持续优化驾驶体验`,
+            documentType: 'automotive',
+            uploadDate: new Date().toISOString()
+        };
+
+        // 日志函数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('testLog');
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logElement.textContent += `\\n[${timestamp}] ${icon} ${message}`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // 更新状态指示器
+        function updateStatus(stepId, status, text) {
+            const element = document.getElementById(stepId);
+            element.className = `status-indicator status-${status}`;
+            
+            const icons = {
+                pending: 'fas fa-clock',
+                running: 'fas fa-spinner fa-spin',
+                success: 'fas fa-check',
+                error: 'fas fa-times'
+            };
+            
+            element.innerHTML = `<i class="${icons[status]}"></i> ${text}`;
+        }
+
+        // 更新进度条
+        function updateProgress(percentage) {
+            document.getElementById('globalProgress').style.width = percentage + '%';
+        }
+
+        // 显示输出
+        function showOutput(stepId, content) {
+            const outputElement = document.getElementById(stepId);
+            outputElement.style.display = 'block';
+            outputElement.textContent = typeof content === 'object' ? JSON.stringify(content, null, 2) : content;
+        }
+
+        // 步骤1: 文档处理和AI补全
+        async function testDocumentProcessing() {
+            log('开始步骤1: 文档处理和AI补全');
+            updateStatus('step1Status', 'running', '处理中...');
+            
+            try {
+                // 模拟文档上传
+                await sleep(1000);
+                log('✓ 上传EcoLoop设计文档');
+                testState.documentContent = MOCK_ECOLOOP_DOCUMENT;
+                
+                // 真实AI补全调用
+                log('🤖 调用AI进行补充信息生成...');
+                testState.supplementData = await callAIForSupplement();
+                
+                log('✓ AI补全完成，生成5个关键字段');
+                updateStatus('step1Status', 'success', '完成');
+                showOutput('step1Output', {
+                    documentTitle: testState.documentContent.title,
+                    contentLength: testState.documentContent.content.length,
+                    supplementData: testState.supplementData
+                });
+                
+                return true;
+            } catch (error) {
+                log(`❌ 步骤1失败: ${error.message}`, 'error');
+                updateStatus('step1Status', 'error', '失败');
+                return false;
+            }
+        }
+
+        // AI补全调用函数
+        async function callAIForSupplement() {
+            const documentContent = testState.documentContent.content;
+            const documentType = testState.documentContent.documentType;
+            
+            const prompt = `作为产品设计和制造专家，请根据以下产品设计文档，补全缺失的关键信息。
+
+【产品文档】：
+${documentContent.substring(0, 1000)}...
+
+【产品类型】：${documentType}
+
+请为以下5个关键字段生成具体、准确的信息（JSON格式）：
+{
+  "供应商地理位置信息": "具体的供应商地理位置和选择理由",
+  "原材料具体规格和来源": "详细的原材料规格和供应商信息",
+  "生产工艺详细流程": "完整的生产工艺流程步骤",
+  "物流运输方式和路径": "具体的物流运输方案和路径",
+  "产品使用场景和周期": "详细的使用场景描述和生命周期"
+}
+
+要求：
+1) 基于文档内容生成真实可信的信息
+2) 考虑${documentType}行业特点
+3) 返回严格的JSON格式
+4) 信息要具体且可执行`;
+
+            try {
+                // 📤 打印AI输入信息
+                console.log('=================== AI补全调用 ===================');
+                console.log('🔹 API端点:', 'https://api-inference.modelscope.cn/v1/chat/completions');
+                console.log('🔹 模型:', 'deepseek-ai/DeepSeek-V3.1');
+                console.log('🔹 提示词长度:', prompt.length, '字符');
+                console.log('📤 完整提示词:');
+                console.log(prompt);
+                console.log('📤 请求参数:', {
+                    model: 'deepseek-ai/DeepSeek-V3.1',
+                    max_tokens: 800,
+                    temperature: 0.7
+                });
+                
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Client-Request': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-ai/DeepSeek-V3.1',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 800,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    console.log('❌ AI API响应错误:', response.status, response.statusText);
+                    throw new Error('AI API调用失败');
+                }
+
+                const data = await response.json();
+                console.log('📥 AI API完整响应:', data);
+                
+                const content = data.choices[0].message.content;
+                console.log('📥 AI返回内容:', content);
+                
+                // 提取JSON
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsedResult = JSON.parse(jsonMatch[0]);
+                    console.log('✅ 解析后的结果:', parsedResult);
+                    console.log('=================== AI补全完成 ===================\n');
+                    return parsedResult;
+                } else {
+                    console.log('❌ 未找到JSON格式内容');
+                    throw new Error('AI返回格式错误');
+                }
+            } catch (error) {
+                log(`⚠️ AI补全失败，使用备用数据: ${error.message}`, 'warning');
+                // 备用数据
+                return {
+                    "供应商地理位置信息": "江苏苏州（基于汽车制造产业集群分析）",
+                    "原材料具体规格和来源": "钢材-宝钢集团，橡胶-米其林，电池-比亚迪",
+                    "生产工艺详细流程": "冲压成型→焊接装配→涂装处理→总装调试→路试检验",
+                    "物流运输方式和路径": "多式联运，海运+陆运结合，成本优化12%",
+                    "产品使用场景和周期": "交通工具，使用寿命10-15年"
+                };
+            }
+        }
+
+        // [MODIFIED] 新增：AI数据分析调用函数
+        // Impact: 为“步骤2: 数据分析”接入真实AI接口，点击按钮将发起API请求并在控制台完整输出请求/响应，生成碳排放与时间线基础数据。
+        // Backward Compatibility: 如果AI调用失败或返回格式不符合预期，将自动回退到原有的本地基础数据生成逻辑，保证功能可用。
+        async function callAIForDataAnalysis() {
+            const documentContent = testState.documentContent?.content || '';
+            const supplementData = testState.supplementData || {};
+            const productTypeName = '汽车制造';
+            
+            const prompt = `作为碳排放管理和生命周期评估专家，请分析以下产品的碳排放和时间线数据。\n\n【产品信息】\n产品类型：${productTypeName}\n文档内容：${documentContent.substring(0, 1500)}\n补充信息：${Object.entries(supplementData).map(([key, value]) => `${key}: ${value}`).join(', ')}\n\n请为该产品生成真实可信的碳排放和时间线分析数据（JSON格式）：\n\n{\n  "emissions": {\n    "procurement": {"value": 数值, "unit": "kg CO₂e", "description": "原料采购阶段排放描述"},\n    "manufacturing": {"value": 数值, "unit": "kg CO₂e", "description": "生产制造阶段排放描述"},\n    "logistics": {"value": 数值, "unit": "kg CO₂e", "description": "物流运输阶段排放描述"},\n    "usage": {"value": 数值, "unit": "kg CO₂e", "description": "产品使用阶段排放描述"},\n    "recycling": {"value": 数值, "unit": "kg CO₂e", "description": "回收处理阶段排放描述"},\n    "decomposition": {"value": 数值, "unit": "kg CO₂e", "description": "自然降解阶段排放描述"}\n  },\n  "timeline": {\n    "purchase": {"duration": 天数, "unit": "天", "description": "采购阶段时长描述"},\n    "produce": {"duration": 天数, "unit": "天", "description": "生产阶段时长描述"},\n    "use": {"duration": 天数, "unit": "天", "description": "使用阶段时长描述"},\n    "recycle": {"duration": 天数, "unit": "天", "description": "回收阶段时长描述"},\n    "decompose": {"duration": 天数, "unit": "天", "description": "分解阶段时长描述"}\n  }\n}\n\n要求：\n1. 根据产品类型和特征提供真实合理的数值\n2. 碳排放值基于实际行业数据，单位统一为kg CO₂e\n3. 时间线统一用天为单位（1个月=30天，1年=365天）\n4. 考虑产品的具体特点和使用场景\n5. 数值要具有可信度，符合行业常识\n6. 返回严格JSON格式，无多余文本`;
+            
+            console.log('=================== AI基础数据分析调用 ===================');
+            console.log('🔹 API端点:', 'https://api-inference.modelscope.cn/v1/chat/completions');
+            console.log('🔹 模型:', 'deepseek-ai/DeepSeek-V3.1');
+            console.log('📤 提示词长度:', prompt.length, '字符');
+            console.log('📤 完整提示词:');
+            console.log(prompt);
+            const requestBody = {
+                model: 'deepseek-ai/DeepSeek-V3.1',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 1000,
+                temperature: 0.3
+            };
+            console.log('📤 请求参数:', requestBody);
+            
+            const response = await fetch('/api/ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Client-Request': 'true'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            console.log('📥 AI API响应状态:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.log('❌ AI API响应错误:', response.status, response.statusText, '-', errorText);
+                throw new Error(`AI API调用失败: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('📥 AI API完整响应:', data);
+            const aiContent = data?.choices?.[0]?.message?.content || '';
+            console.log('📥 AI返回内容:', aiContent);
+            
+            const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+                console.log('❌ 未找到有效JSON格式');
+                throw new Error('AI返回格式错误');
+            }
+            console.log('🔍 提取的JSON字符串:', jsonMatch[0]);
+            const parsed = JSON.parse(jsonMatch[0]);
+            console.log('✅ 解析后的分析数据:', parsed);
+            
+            // 统一转换为系统内部数据结构
+            const emissionsOut = {};
+            const timelineOut = {};
+            const emissionKeys = ['procurement','manufacturing','logistics','usage','recycling','decomposition'];
+            const timelineKeys = ['purchase','produce','use','recycle','decompose'];
+            
+            emissionKeys.forEach(k => {
+                const item = parsed?.emissions?.[k];
+                if (item && typeof item.value !== 'undefined') {
+                    const v = Number(item.value);
+                    emissionsOut[k] = { value: Number.isFinite(v) ? v : 0, originalValue: Number.isFinite(v) ? v : 0 };
+                }
+            });
+            timelineKeys.forEach(k => {
+                const item = parsed?.timeline?.[k];
+                if (item && typeof item.duration !== 'undefined') {
+                    const d = Number(item.duration);
+                    timelineOut[k] = { duration: Math.max(1, Math.floor(Number.isFinite(d) ? d : 1)), originalDuration: Math.max(1, Math.floor(Number.isFinite(d) ? d : 1)), unit: '天' };
+                }
+            });
+            
+            console.log('📊 整理后的系统结构:', { emissions: emissionsOut, timeline: timelineOut });
+            console.log('=================== AI基础数据分析完成 ===================\n');
+            
+            return { emissions: emissionsOut, timeline: timelineOut };
+        }
+
+        // 步骤2: 数据分析
+        async function testDataAnalysis() {
+            log('开始步骤2: 数据分析');
+            updateStatus('step2Status', 'running', '分析中...');
+            
+            try {
+                log('🤖 调用AI生成碳排放与时间线基础数据...');
+                const aiData = await callAIForDataAnalysis();
+                testState.analysisData = aiData;
+                log('✓ 碳排放分析完成');
+                log('✓ 时间线分析完成');
+                updateStatus('step2Status', 'success', '完成');
+                showOutput('step2Output', testState.analysisData);
+                return true;
+            } catch (error) {
+                // [MODIFIED] 回退到原有的本地基础数据逻辑，确保功能不中断
+                // Impact: 当AI不可用时，依然提供可用的数据结构，保障后续流程可继续
+                // Backward Compatibility: 完全保留原有本地数据结构与取值范围
+                log(`⚠️ AI分析失败，使用备用基础数据: ${error.message}`, 'warning');
+                testState.analysisData = {
+                    emissions: {
+                        procurement: { value: 85, originalValue: 85, defaultDiff: 35 },
+                        manufacturing: { value: 140, originalValue: 140, defaultDiff: 45 },
+                        logistics: { value: 40, originalValue: 40, defaultDiff: 15 },
+                        usage: { value: 180, originalValue: 180, defaultDiff: 70 },
+                        recycling: { value: 30, originalValue: 30, defaultDiff: 12 },
+                        decomposition: { value: 15, originalValue: 15, defaultDiff: 5 }
+                    },
+                    timeline: {
+                        purchase: { duration: 12, originalDuration: 12, unit: '周采购周期' },
+                        produce: { duration: 20, originalDuration: 20, unit: '周生产周期' },
+                        use: { duration: 120, originalDuration: 120, unit: '个月使用寿命' },
+                        recycle: { duration: 6, originalDuration: 6, unit: '个月拆解回收' },
+                        decompose: { duration: 30, originalDuration: 30, unit: '个月材料处理' }
+                    }
+                };
+                updateStatus('step2Status', 'success', '完成(回退)');
+                showOutput('step2Output', testState.analysisData);
+                return true;
+            }
+        }
+
+        // 步骤3: Lean建议生成
+        async function testLeanSuggestions() {
+            log('开始步骤3: Lean建议生成');
+            updateStatus('step3Status', 'running', '生成中...');
+            
+            try {
+                const areas = ['材料选择', '生产工艺', '供应链管理'];
+                testState.leanSuggestions = {};
+                testState.acceptedSuggestions = [];
+                testState.acceptedSuggestionsByArea = {};
+                
+                // 为每个领域调用真实AI生成建议
+                for (const area of areas) {
+                    log(`🤖 为${area}领域调用AI生成建议...`);
+                    const suggestions = await callAIForLeanSuggestions(area);
+                    testState.leanSuggestions[area] = suggestions;
+                    
+                    // 模拟采纳第一个建议
+                    if (suggestions && suggestions.length > 0) {
+                        const acceptedTitle = suggestions[0].title;
+                        testState.acceptedSuggestions.push(acceptedTitle);
+                        testState.acceptedSuggestionsByArea[area] = [acceptedTitle];
+                        log(`✓ 采纳建议: ${acceptedTitle}`);
+                    }
+                }
+                
+                log('✓ 完成3个领域的AI建议生成');
+                log(`✓ 共采纳${testState.acceptedSuggestions.length}个建议`);
+                updateStatus('step3Status', 'success', '完成');
+                showOutput('step3Output', {
+                    suggestionsGenerated: Object.keys(testState.leanSuggestions).length,
+                    acceptedSuggestions: testState.acceptedSuggestions,
+                    acceptedByArea: testState.acceptedSuggestionsByArea
+                });
+                
+                return true;
+            } catch (error) {
+                log(`❌ 步骤3失败: ${error.message}`, 'error');
+                updateStatus('step3Status', 'error', '失败');
+                return false;
+            }
+        }
+
+        // AI Lean建议生成函数（复制自index_improved.html）
+        async function callAIForLeanSuggestions(area) {
+            const documentContent = testState.documentContent?.content || '';
+            const supplementData = testState.supplementData || {};
+            const productType = testState.documentContent?.documentType || 'automotive';
+            const productTypeName = "汽车制造";
+            const analysisData = testState.analysisData || {};
+            
+            // 准备子模块映射与基线
+            const carbonMapCN = {
+                procurement: '原料采购',
+                manufacturing: '生产制造',
+                logistics: '物流运输',
+                usage: '产品使用',
+                recycling: '回收处理',
+                decomposition: '自然降解'
+            };
+            const timeMapCN = {
+                purchase: '采购阶段',
+                produce: '生产阶段',
+                use: '使用阶段',
+                recycle: '回收阶段',
+                decompose: '分解阶段'
+            };
+            const carbonBaseline = {
+                procurement: analysisData?.emissions?.procurement?.value ?? 85,
+                manufacturing: analysisData?.emissions?.manufacturing?.value ?? 140,
+                logistics: analysisData?.emissions?.logistics?.value ?? 40,
+                usage: analysisData?.emissions?.usage?.value ?? 180,
+                recycling: analysisData?.emissions?.recycling?.value ?? 30,
+                decomposition: analysisData?.emissions?.decomposition?.value ?? 15
+            };
+            const timeBaseline = {
+                purchase: analysisData?.timeline?.purchase?.duration ?? 12,
+                produce: analysisData?.timeline?.produce?.duration ?? 20,
+                use: analysisData?.timeline?.use?.duration ?? 120,
+                recycle: analysisData?.timeline?.recycle?.duration ?? 6,
+                decompose: analysisData?.timeline?.decompose?.duration ?? 30
+            };
+
+            // 构建AI提示词（与index_improved.html完全一致）
+            const prompt = `作为碳排放管理和精益生产专家，请为${productTypeName}产品的${area}领域生成3个具体的优化建议。
+
+【产品信息】：
+产品类型：${productTypeName}
+文档内容：${documentContent.substring(0, 300)}...
+补充信息：${Object.entries(supplementData).map(([key, value]) => `${key}: ${value}`).join(', ')}
+
+【优化领域】：${area}
+
+【子模块（键→中文名）】
+碳排放：${JSON.stringify(carbonMapCN)}
+时间：${JSON.stringify(timeMapCN)}
+
+【当前基线（单位严格统一）】
+碳排放（kgCO2e）：${JSON.stringify(carbonBaseline)}
+时间（天）：${JSON.stringify(timeBaseline)}
+
+请为每个建议提供以下信息（JSON格式）：
+{
+  "suggestions": [
+    {
+      "icon": "对应的FontAwesome图标类名",
+      "title": "建议标题",
+      "desc": "详细的建议描述",
+      "subProject": "子项目名称",
+      "carbonAfter": { "procurement": 0, "manufacturing": 0, "logistics": 0, "usage": 0, "recycling": 0, "decomposition": 0 },
+      "timeAfter": { "purchase": 0, "produce": 0, "use": 0, "recycle": 0, "decompose": 0 },
+      "carbonImprovements": { "procurement": 0, "manufacturing": 0, "logistics": 0, "usage": 0, "recycling": 0, "decomposition": 0 },
+      "timeImprovements": { "purchase": 0, "produce": 0, "use": 0, "recycle": 0, "decompose": 0 }
+    }
+  ]
+}
+
+要求（务必严格遵守）：
+1) 子模块与单位：所有 after 值必须与基线键一一对应，单位严格一致（碳排=kgCO2e，时间=天）。
+2) 数值合法性：timeAfter 各键必须是正整数（>=1）；carbonAfter 各键必须是非负数（>=0），可保留1位小数。
+3) 合理范围：timeAfter[k] 应在 [max(1, round(基线[k]*0.5)), round(基线[k]*1.3)] 范围内；carbonAfter[k] 应在 [0, 基线[k]*1.3] 范围内。
+4) 只返回合法JSON；确保 carbonImprovements 和 timeImprovements 的键与"子模块（键→中文名）"完全对应。`;
+
+            try {
+                // 📤 打印AI输入信息
+                console.log(`================== AI Lean建议调用 (${area}) ==================`);
+                console.log('🔹 API端点:', 'https://api-inference.modelscope.cn/v1/chat/completions');
+                console.log('🔹 模型:', 'deepseek-ai/DeepSeek-V3.1');
+                console.log('🔹 优化领域:', area);
+                console.log('🔹 提示词长度:', prompt.length, '字符');
+                console.log('📤 完整提示词:');
+                console.log(prompt);
+                console.log('📤 请求参数:', {
+                    model: 'deepseek-ai/DeepSeek-V3.1',
+                    max_tokens: 1500,
+                    temperature: 0.7
+                });
+                console.log('📤 基线数据:');
+                console.log('碳排放基线:', carbonBaseline);
+                console.log('时间基线:', timeBaseline);
+                
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Client-Request': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-ai/DeepSeek-V3.1',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 1500,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    console.log('❌ AI API响应错误:', response.status, response.statusText);
+                    throw new Error('AI API调用失败');
+                }
+
+                const data = await response.json();
+                console.log('📥 AI API完整响应:', data);
+                
+                const aiResponse = data.choices[0].message.content;
+                console.log('📥 AI返回内容:', aiResponse);
+                
+                // 解析AI返回的JSON
+                const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    console.log('🔍 提取的JSON字符串:', jsonMatch[0]);
+                    const suggestions = JSON.parse(jsonMatch[0]);
+                    console.log('✅ 解析后的建议结构:', suggestions);
+                    
+                    // 验证数据格式并返回建议数组
+                    if (suggestions.suggestions && Array.isArray(suggestions.suggestions)) {
+                        const processedSuggestions = suggestions.suggestions.map((suggestion, index) => {
+                            console.log(`🔧 处理建议 ${index + 1}:`, suggestion.title);
+                            // 确保有改进百分比数据
+                            if (!suggestion.carbonImprovements || !suggestion.timeImprovements) {
+                                console.log('⚠️ 建议缺少改进数据，使用默认值');
+                                suggestion.carbonImprovements = {
+                                    procurement: 10, manufacturing: 15, logistics: 8,
+                                    usage: 20, recycling: 5, decomposition: 2
+                                };
+                                suggestion.timeImprovements = {
+                                    purchase: 10, produce: 15, use: 8,
+                                    recycle: 12, decompose: 5
+                                };
+                            }
+                            console.log(`✓ 建议 ${index + 1} 处理完成:`, {
+                                title: suggestion.title,
+                                carbonImprovements: suggestion.carbonImprovements,
+                                timeImprovements: suggestion.timeImprovements
+                            });
+                            return suggestion;
+                        });
+                        console.log(`================== AI Lean建议完成 (${area}) ==================\n`);
+                        return processedSuggestions;
+                    }
+                }
+                console.log('❌ 未找到有效的建议数据结构');
+                throw new Error('AI返回格式错误');
+            } catch (error) {
+                log(`⚠️ AI建议生成失败，使用备用数据: ${error.message}`, 'warning');
+                
+                // 备用建议数据
+                const fallbackSuggestions = {
+                    '材料选择': [
+                        {
+                            title: `${productTypeName}生物基材料替代`,
+                            desc: `针对${productTypeName}特点，采用生物降解材料替代传统材料，减少化学处理工序和环境影响`,
+                            icon: "fas fa-seedling",
+                            subProject: "生物基材料选择",
+                            carbonImprovements: { procurement: 25, manufacturing: 15, logistics: 10, usage: 20, recycling: 8, decomposition: 5 },
+                            timeImprovements: { purchase: 15, produce: 20, use: 10, recycle: 12, decompose: 8 }
+                        }
+                    ],
+                    '生产工艺': [
+                        {
+                            title: `${productTypeName}精益生产流程`,
+                            desc: `针对${productTypeName}特点实施精益生产理念，消除浪费和冗余工序`,
+                            icon: "fas fa-cogs",
+                            subProject: "精益生产流程",
+                            carbonImprovements: { procurement: 12, manufacturing: 40, logistics: 8, usage: 18, recycling: 5, decomposition: 2 },
+                            timeImprovements: { purchase: 15, produce: 35, use: 8, recycle: 10, decompose: 3 }
+                        }
+                    ],
+                    '供应链管理': [
+                        {
+                            title: `${productTypeName}就近采购策略`,
+                            desc: `为${productTypeName}优先选择本地供应商，减少运输距离和时间`,
+                            icon: "fas fa-map",
+                            subProject: "就近采购策略",
+                            carbonImprovements: { procurement: 20, manufacturing: 5, logistics: 45, usage: 8, recycling: 5, decomposition: 2 },
+                            timeImprovements: { purchase: 30, produce: 8, use: 5, recycle: 8, decompose: 2 }
+                        }
+                    ]
+                };
+                
+                return fallbackSuggestions[area] || [];
+            }
+        }
+
+        // 步骤4: Scrum执行图生成
+        async function testScrumGeneration() {
+            log('开始步骤4: Scrum执行图生成');
+            updateStatus('step4Status', 'running', '生成中...');
+            
+            try {
+                await sleep(3000);
+                
+                // 构建AI提示词
+                const prompt = buildScrumAIPrompt();
+                log('✓ 构建AI提示词完成');
+                
+                // 真实AI生成或使用回退方案
+                const plan = await generateScrumPlan();
+                log('✓ Scrum计划生成完成');
+                
+                // 生成任务数据
+                testState.scrumTasks = processScrumPlan(plan);
+                log('✓ 任务数据处理完成');
+                
+                updateStatus('step4Status', 'success', '完成');
+                showOutput('step4Output', {
+                    sprint: plan.sprint,
+                    tasksGenerated: plan.tasks.length,
+                    scrumTasks: testState.scrumTasks
+                });
+                
+                // 显示结果预览
+                showResults();
+                
+                return true;
+            } catch (error) {
+                log(`❌ 步骤4失败: ${error.message}`, 'error');
+                updateStatus('step4Status', 'error', '失败');
+                return false;
+            }
+        }
+
+        // 构建Scrum AI提示词
+        function buildScrumAIPrompt() {
+            const docContent = testState.documentContent ? testState.documentContent.content.slice(0, 2000) : '';
+            const supplementData = testState.supplementData || {};
+            const productTypeName = "汽车制造";
+            const analysis = testState.analysisData || {};
+            const accepted = testState.acceptedSuggestions || [];
+            const acceptedByArea = testState.acceptedSuggestionsByArea || {};
+            
+            // 将缓存建议拍平
+            const cachedSuggestions = [];
+            Object.keys(testState.leanSuggestions || {}).forEach(area => {
+                const items = (testState.leanSuggestions[area] || []).map(s => ({ area, title: s.title, desc: s.desc }));
+                cachedSuggestions.push(...items);
+            });
+            
+            const prompt = `你是敏捷项目经理。请基于以下真实上下文，为当前产品生成一个可执行的Sprint任务计划（JSON）。
+
+【产品类型】${productTypeName}
+【文档摘要】${docContent}
+【补充信息】${JSON.stringify(supplementData)}
+【当前分析数据-碳排】${JSON.stringify(analysis.emissions || {})}
+【当前分析数据-时间】${JSON.stringify(analysis.timeline || {})}
+【已采纳建议】${JSON.stringify(accepted)}
+【建议缓存摘要】${JSON.stringify(cachedSuggestions).slice(0, 2000)}
+
+请输出严格JSON：{
+  "sprint": {"name": "Sprint 1", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD"},
+  "tasks": [
+    {"title":"","desc":"","assignee":"(可为空)","priority":"high|medium|low","storyPoints":8,"startDate":"YYYY-MM-DD","endDate":"YYYY-MM-DD","status":"todo|in-progress|done","tags":["材料选择"],"relatedSuggestion":"(若有)"}
+  ]
+}
+
+要求：
+1) 任务需可执行，覆盖关键已采纳建议或高影响板块；
+2) 所有时间以日为最小单位，任务持续时间1-30天，日期合理由近到远；
+3) startDate和endDate必须是有效的YYYY-MM-DD格式日期；
+4) 如无明确负责人，assignee留空；
+5) 严格返回JSON，不要多余文本。`;
+            
+            return prompt;
+        }
+
+        // 生成Scrum计划（与index_improved.html完全一致）
+        async function generateScrumPlan() {
+            const prompt = buildScrumAIPrompt();
+            
+            try {
+                // 📤 打印AI输入信息
+                console.log('================== AI Scrum计划调用 ==================');
+                console.log('🔹 API端点:', 'https://api-inference.modelscope.cn/v1/chat/completions');
+                console.log('🔹 模型:', 'deepseek-ai/DeepSeek-V3.1');
+                console.log('🔹 提示词长度:', prompt.length, '字符');
+                console.log('📤 完整提示词:');
+                console.log(prompt);
+                console.log('📤 请求参数:', {
+                    model: 'deepseek-ai/DeepSeek-V3.1',
+                    max_tokens: 1200,
+                    temperature: 0.5
+                });
+                console.log('📤 上下文数据:');
+                console.log('文档内容长度:', testState.documentContent?.content?.length || 0);
+                console.log('补充数据:', testState.supplementData);
+                console.log('已采纳建议:', testState.acceptedSuggestions);
+                console.log('分析数据:', testState.analysisData);
+                
+                log('🤖 调用AI生成Scrum计划...');
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Client-Request': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-ai/DeepSeek-V3.1',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 1200,
+                        temperature: 0.5
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.log('❌ AI API响应错误:', response.status, response.statusText);
+                    throw new Error('AI生成失败');
+                }
+                
+                const data = await response.json();
+                console.log('📥 AI API完整响应:', data);
+                
+                const content = data.choices?.[0]?.message?.content || '';
+                console.log('📥 AI返回内容:', content);
+                
+                const match = content.match(/\{[\s\S]*\}/);
+                
+                if (match) {
+                    console.log('🔍 提取的JSON字符串:', match[0]);
+                    const plan = JSON.parse(match[0]);
+                    console.log('✅ 解析后的Scrum计划:', plan);
+                    console.log('✓ AI成功生成Scrum计划');
+                    console.log('Sprint信息:', plan.sprint);
+                    console.log('任务数量:', plan.tasks?.length || 0);
+                    console.log('================== AI Scrum计划完成 ==================\n');
+                    log('✓ AI成功生成Scrum计划');
+                    return plan;
+                }
+                
+                console.log('❌ 未找到JSON格式内容');
+                throw new Error('AI返回格式错误');
+            } catch (e) {
+                log(`⚠️ AI不可用，使用规则回退生成: ${e.message}`, 'warning');
+                return buildScrumPlanFallback();
+            }
+        }
+
+        // 回退方案生成Scrum计划
+        function buildScrumPlanFallback() {
+            const tasks = [];
+            const today = new Date();
+            let dayOffset = 0;
+            
+            // 基于已采纳建议生成任务
+            Object.keys(testState.acceptedSuggestionsByArea || {}).forEach(area => {
+                (testState.acceptedSuggestionsByArea[area] || []).forEach((title, idx) => {
+                    const start = new Date(today.getTime() + dayOffset*86400000);
+                    const end = new Date(start.getTime() + (3 + (idx%3))*86400000);
+                    tasks.push({
+                        title: `${area} - 执行「${title}」`,
+                        desc: '根据已采纳建议落实执行、验证与复盘',
+                        assignee: ['张明', '李华', '王芳', '陈强'][idx % 4],
+                        priority: idx%2===0 ? 'high' : 'medium',
+                        storyPoints: [5,8,13,3][idx%4],
+                        startDate: start.toISOString().slice(0,10),
+                        endDate: end.toISOString().slice(0,10),
+                        status: idx%3===0 ? 'in-progress' : 'todo',
+                        tags: [area],
+                        relatedSuggestion: title
+                    });
+                    dayOffset += 2;
+                });
+            });
+            
+            // 基于高排放环节生成补充任务
+            if (testState.analysisData?.emissions) {
+                const sorted = Object.entries(testState.analysisData.emissions)
+                    .sort((a,b)=> (b[1].value||0) - (a[1].value||0))
+                    .slice(0,2);
+                    
+                sorted.forEach(([key, value], i) => {
+                    const start = new Date(today.getTime() + dayOffset*86400000);
+                    const end = new Date(start.getTime() + 4*86400000);
+                    const phaseNames = {
+                        procurement: '原料采购',
+                        manufacturing: '生产制造',
+                        logistics: '物流运输',
+                        usage: '产品使用',
+                        recycling: '回收处理',
+                        decomposition: '自然降解'
+                    };
+                    tasks.push({
+                        title: `优化「${phaseNames[key] || key}」阶段排放`,
+                        desc: '制定并执行降碳举措，跟踪关键指标',
+                        assignee: ['刘洋', '赵敏'][i],
+                        priority: i===0?'high':'medium',
+                        storyPoints: [8,5][i],
+                        startDate: start.toISOString().slice(0,10),
+                        endDate: end.toISOString().slice(0,10),
+                        status: 'todo',
+                        tags: ['降碳', '数据驱动'],
+                        relatedSuggestion: null
+                    });
+                    dayOffset += 3;
+                });
+            }
+            
+            return {
+                sprint: {
+                    name: "EcoLoop电动汽车碳优化Sprint 1",
+                    startDate: today.toISOString().slice(0,10),
+                    endDate: new Date(today.getTime() + 14*86400000).toISOString().slice(0,10)
+                },
+                tasks: tasks
+            };
+        }
+
+        // 处理Scrum计划
+        function processScrumPlan(plan) {
+            console.log('================ Scrum计划数据处理 ================');
+            console.log('📋 输入计划:', plan);
+            
+            const buckets = { 'todo': [], 'in-progress': [], 'done': [] };
+            const tasks = Array.isArray(plan?.tasks) ? plan.tasks : [];
+            console.log('📋 提取的任务数组:', tasks);
+            console.log('📋 任务数量:', tasks.length);
+            
+            const normalizePriority = (p) => (p==='high'||p==='medium'||p==='low') ? p : 'medium';
+            const normalizeStatus = (s) => (s==='todo'||s==='in-progress'||s==='done') ? s : 'todo';
+            
+            tasks.forEach((t, idx) => {
+                console.log(`🔧 处理任务 ${idx + 1}:`, t.title);
+                const task = {
+                    id: `test-${Date.now()}-${idx}`,
+                    title: t.title || `任务${idx+1}`,
+                    description: t.desc || '',
+                    assignee: t.assignee || '',
+                    priority: normalizePriority(t.priority),
+                    storyPoints: Number.isFinite(t.storyPoints) ? t.storyPoints : 5,
+                    startDate: t.startDate || new Date().toISOString().slice(0,10),
+                    endDate: t.endDate || new Date(Date.now()+3*86400000).toISOString().slice(0,10),
+                    tags: Array.isArray(t.tags) ? t.tags : [],
+                    relatedSuggestion: t.relatedSuggestion || null,
+                    progress: t.status==='in-progress' ? 30 : (t.status==='done'? 100 : undefined)
+                };
+                const status = normalizeStatus(t.status);
+                buckets[status].push(task);
+                console.log(`✓ 任务 ${idx + 1} 分配到状态: ${status}`, {
+                    title: task.title,
+                    priority: task.priority,
+                    storyPoints: task.storyPoints,
+                    assignee: task.assignee
+                });
+            });
+            
+            const finalData = Object.assign(buckets, { __auto: true });
+            console.log('📊 最终分桶结果:');
+            console.log('  - todo:', finalData.todo.length, '个任务');
+            console.log('  - in-progress:', finalData['in-progress'].length, '个任务');
+            console.log('  - done:', finalData.done.length, '个任务');
+            console.log('✅ 数据结构验证:');
+            console.log('  - todo是数组:', Array.isArray(finalData.todo));
+            console.log('  - in-progress是数组:', Array.isArray(finalData['in-progress']));
+            console.log('  - done是数组:', Array.isArray(finalData.done));
+            console.log('  - __auto标记:', finalData.__auto);
+            console.log('================ Scrum计划处理完成 ================\n');
+            
+            return finalData;
+        }
+
+        // 显示结果
+        function showResults() {
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('resultPreview').style.display = 'block';
+            
+            // 渲染Kanban预览
+            renderKanbanPreview();
+            
+            // 渲染甘特图预览
+            renderGanttPreview();
+            
+            log('✅ 结果预览生成完成', 'success');
+        }
+
+        // 渲染Kanban预览
+        function renderKanbanPreview() {
+            const kanbanContainer = document.getElementById('kanbanPreview');
+            const statusNames = {
+                'todo': '待办事项',
+                'in-progress': '进行中',
+                'done': '已完成'
+            };
+            
+            let html = '';
+            Object.keys(statusNames).forEach(status => {
+                const tasks = testState.scrumTasks[status] || [];
+                html += `
+                    <div class="kanban-column">
+                        <h4>${statusNames[status]} (${tasks.length})</h4>
+                        ${tasks.map(task => `
+                            <div class="task-item">
+                                <strong>${task.title}</strong><br>
+                                <small>${task.assignee} • ${task.storyPoints}SP</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            });
+            
+            kanbanContainer.innerHTML = html;
+        }
+
+        // 渲染甘特图预览
+        function renderGanttPreview() {
+            const ganttContainer = document.getElementById('ganttPreview');
+            const allTasks = [];
+            
+            Object.keys(testState.scrumTasks).forEach(status => {
+                if (status !== '__auto' && status !== '__aiGenerated' && Array.isArray(testState.scrumTasks[status])) {
+                    allTasks.push(...testState.scrumTasks[status]);
+                }
+            });
+            
+            const statusColors = {
+                'todo': '#6c757d',
+                'in-progress': '#ffc107',
+                'done': '#28a745'
+            };
+            
+            let html = '<div class="gantt-timeline">';
+            allTasks.forEach(task => {
+                const status = Object.keys(testState.scrumTasks).find(s => 
+                    s !== '__auto' && testState.scrumTasks[s].includes(task)
+                ) || 'todo';
+                
+                html += `
+                    <div class="gantt-bar" style="background: ${statusColors[status]}; width: ${task.storyPoints * 10}%;">
+                        ${task.title} (${task.assignee})
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            ganttContainer.innerHTML = html;
+        }
+
+        // 显示AI提示词
+        function showAIPrompt() {
+            const prompt = buildScrumAIPrompt();
+            showOutput('aiPromptOutput', prompt);
+        }
+
+        // 运行完整测试
+        async function runFullTest() {
+            log('=== 开始完整测试 ===', 'success');
+            testState.testStartTime = Date.now();
+            updateStatus('globalStatus', 'running', '测试中...');
+            
+            try {
+                // 步骤1
+                updateProgress(10);
+                if (!(await testDocumentProcessing())) throw new Error('步骤1失败');
+                
+                // 步骤2
+                updateProgress(35);
+                if (!(await testDataAnalysis())) throw new Error('步骤2失败');
+                
+                // 步骤3
+                updateProgress(60);
+                if (!(await testLeanSuggestions())) throw new Error('步骤3失败');
+                
+                // 步骤4
+                updateProgress(85);
+                if (!(await testScrumGeneration())) throw new Error('步骤4失败');
+                
+                updateProgress(100);
+                updateStatus('globalStatus', 'success', '测试完成');
+                
+                const duration = ((Date.now() - testState.testStartTime) / 1000).toFixed(1);
+                log(`=== 完整测试成功完成 (耗时: ${duration}秒) ===`, 'success');
+                
+            } catch (error) {
+                updateStatus('globalStatus', 'error', '测试失败');
+                log(`=== 测试失败: ${error.message} ===`, 'error');
+            }
+        }
+
+        // 分步执行
+        async function runStepByStep() {
+            log('=== 开始分步执行 ===');
+            
+            const steps = [
+                { func: testDocumentProcessing, name: '文档处理' },
+                { func: testDataAnalysis, name: '数据分析' },
+                { func: testLeanSuggestions, name: 'Lean建议' },
+                { func: testScrumGeneration, name: 'Scrum生成' }
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                const result = confirm(`执行步骤${i+1}: ${step.name}?`);
+                if (result) {
+                    log(`手动执行步骤${i+1}: ${step.name}`);
+                    updateProgress((i+1) * 25);
+                    await step.func();
+                } else {
+                    log(`跳过步骤${i+1}: ${step.name}`, 'warning');
+                }
+            }
+            
+            log('=== 分步执行完成 ===');
+        }
+
+        // 重置测试
+        function resetTest() {
+            log('=== 重置测试状态 ===', 'warning');
+            
+            testState = {
+                currentStep: 0,
+                totalSteps: 4,
+                documentContent: null,
+                supplementData: null,
+                analysisData: null,
+                leanSuggestions: null,
+                acceptedSuggestions: null,
+                scrumTasks: null,
+                testStartTime: null
+            };
+            
+            // 重置所有状态
+            ['step1Status', 'step2Status', 'step3Status', 'step4Status', 'globalStatus'].forEach(id => {
+                updateStatus(id, 'pending', '待开始');
+            });
+            
+            // 隐藏输出
+            ['step1Output', 'step2Output', 'step3Output', 'step4Output', 'aiPromptOutput'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            // 重置进度和结果
+            updateProgress(0);
+            document.getElementById('resultPreview').style.display = 'none';
+            document.getElementById('noResults').style.display = 'block';
+            
+            log('测试状态已重置');
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('testLog').textContent = '=== Scrum执行图生成功能测试日志 ===\\n等待测试开始...';
+        }
+
+        // 工具函数
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Scrum执行图测试工具已就绪');
+            log('🤖 真实AI集成测试：步骤1+3+4都调用DeepSeek-V3.1 API');
+            log('📋 完整流程：文档AI补全 → 数据分析 → AI Lean建议 → AI Scrum生成');
+            log('🔄 包含容错机制：AI失败时自动回退到规则生成');
+            log('💡 点击"运行完整测试"开始真实AI测试');
+            log('📺 所有AI输入输出将在浏览器控制台中详细显示');
+            console.log('%c🎯 AI调试模式已启用', 'color: #2196F3; font-weight: bold; font-size: 14px;');
+            console.log('%c📱 打开浏览器控制台查看所有AI调用的详细输入输出', 'color: #4CAF50; font-size: 12px;');
+        });
+    </script>
+</body>
+</html>
