@@ -11,7 +11,7 @@ let documentContents = []; // 存储文档内容
 const AI_CONFIG = {
     baseUrl: 'https://api-inference.modelscope.cn/v1',
     model: 'deepseek-ai/DeepSeek-V3.1',
-    apiKey: 'HIDDEN_API_KEY'
+    apiKey: 'ms-150d583e-ed00-46d3-ab35-570f03555599'
 };
 
 // 文档内容读取函数

@@ -941,11 +941,11 @@
 
                 // 调用真实AI API
                 console.log('开始调用AI API...');
-                const response = await fetch('/api/ai', {
+                const response = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Client-Request': 'true'
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
                     },
                     body: JSON.stringify({
                         model: 'deepseek-ai/DeepSeek-V3.1',
@@ -1950,11 +1950,11 @@ ${Object.entries(supplementData).map(([key, value]) => `${key}: ${value}`).join(
                 console.log(JSON.stringify(requestBody, null, 2));
 
                 // 调用真实AI API
-                const response = await fetch('/api/ai', {
+                const response = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Client-Request': 'true'
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
                     },
                     body: JSON.stringify(requestBody)
                 });
@@ -2336,11 +2336,11 @@ ${suggestion.description}
                 console.log('⏳ 正在调用AI API...');
                 const startTime = Date.now();
                 
-                const res = await fetch('/api/ai', {
+                const res = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Client-Request': 'true'
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
                     },
                     body: JSON.stringify(requestData)
                 });
@@ -5313,5 +5313,47 @@ ${suggestion.description}
             }
         }
     </style>
+    
+    <!-- Railway部署优化脚本 -->
+    <script>
+        // 检测运行环境
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        
+        if (isProduction) {
+            console.log('🚀 EMS系统运行在生产环境');
+            console.log('🌐 域名:', window.location.hostname);
+            
+            // 生产环境的额外配置
+            window.PRODUCTION_MODE = true;
+            
+            // 禁用console.log在生产环境 (可选)
+            // console.log = function() {};
+        } else {
+            console.log('🔧 EMS系统运行在开发环境');
+            window.PRODUCTION_MODE = false;
+        }
+        
+        // 页面加载完成提示
+        window.addEventListener('load', function() {
+            console.log('✅ EMS碳排放管理系统加载完成');
+            console.log('📱 当前页面: index_improved.html (改进版)');
+            console.log('🕐 加载时间:', new Date().toLocaleString());
+        });
+        
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('❌ 页面错误:', e.error);
+            // 可以在这里添加错误上报逻辑
+        });
+        
+        // 网络状态检测
+        window.addEventListener('online', function() {
+            console.log('🌐 网络连接恢复');
+        });
+        
+        window.addEventListener('offline', function() {
+            console.log('🔴 网络连接断开');
+        });
+    </script>
 </body>
 </html>

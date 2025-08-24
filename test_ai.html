@@ -236,11 +236,11 @@
 
                 // 调用真实AI API
                 console.log('开始调用AI API...');
-                const response = await fetch('/api/ai', {
+                const response = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Client-Request': 'true'
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
                     },
                     body: JSON.stringify({
                         model: 'deepseek-ai/DeepSeek-V3.1',
@@ -442,11 +442,11 @@
             result.textContent = '正在测试AI API...';
             
             try {
-                const response = await fetch('/api/ai', {
+                const response = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Client-Request': 'true'
+                        'Authorization': 'Bearer ms-150d583e-ed00-46d3-ab35-570f03555599'
                     },
                     body: JSON.stringify({
                         model: 'deepseek-ai/DeepSeek-V3.1',

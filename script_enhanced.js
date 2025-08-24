@@ -25,7 +25,7 @@ let schemeAnalysisCache = new Map(); // 缓存方案分析结果
 const AI_CONFIG = {
     baseUrl: 'https://api-inference.modelscope.cn/v1',
     model: 'deepseek-ai/DeepSeek-V3.1',
-    apiKey: 'HIDDEN_API_KEY'
+    apiKey: 'ms-150d583e-ed00-46d3-ab35-570f03555599'
 };
 
 // 默认产品数据（用于对比）
